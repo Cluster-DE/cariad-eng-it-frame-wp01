@@ -9,7 +9,7 @@ resource "azurerm_resource_group" "rg_us" {
 }
 
 module "virtual_network_eu" {
-  source              = "modules/virtual_network"
+  source              = "./modules/virtual_network"
   resource_group_name = azurerm_resource_group.rg_eu.name
   location            = azurerm_resource_group.rg_eu.location
   location_short      = "euw"
@@ -21,7 +21,7 @@ module "virtual_network_eu" {
 }
 
 module "virtual_network_us" {
-  source              = "modules/virtual_network"
+  source              = "./modules/virtual_network"
   resource_group_name = azurerm_resource_group.rg_us.name
   location            = azurerm_resource_group.rg_us.location
   location_short      = "usw"
