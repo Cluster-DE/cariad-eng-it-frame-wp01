@@ -20,4 +20,5 @@ jobs:
         uses: ./.github/actions/terraform-init
         with:
           secrets: inherit
+          vars: inherit
           working-directory: infrastructure
