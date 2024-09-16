@@ -35,7 +35,7 @@ module "virtual_network_us" {
 resource "azurerm_virtual_network_peering" "eu-to-us" {
   name                      = "peer-${var.project_name}-${var.environment}-euw"
   resource_group_name       = azurerm_resource_group.rg_eu.name
-  virtual_network_name      = module.virtual_network_us.name
+  virtual_network_name      = module.virtual_network_eu.name
   remote_virtual_network_id = module.virtual_network_us.id
 }
 
