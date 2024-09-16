@@ -4,6 +4,10 @@ run-name: '🚀 dev-deployment: "${{ github.ref_name }}"'
 on:
   workflow_dispatch:
 
+env:
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET}}
+  ARM_CLIENT_ID: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID}}
+
 jobs:
   terraform-init:
     name: terraform init
