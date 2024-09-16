@@ -32,3 +32,8 @@ variable "subnet_name" {
   type        = string
   description = "subnet name"
 }
+
+variable "subnet_address_prefixes" {
+  type        = list(string)
+  description = "subnet address prefixes"
+}
