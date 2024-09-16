@@ -1,0 +1,17 @@
+name: "🚀 dev-deployment"
+run-name: '🚀 dev-deployment: "${{ github.ref_name }}"'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform-init:
+    name: terraform init
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: terraform init
+        uses: ./.github/actions/terraform-init
+        with:
+          working-directory: infrastructure
