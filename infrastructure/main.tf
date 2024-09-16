@@ -31,3 +31,17 @@ module "virtual_network_us" {
   subnet_name         = "subnet"
   subnet_address_prefixes = ["10.2.1.0/24"]
 }
+
+resource "azurerm_virtual_network_peering" "eu-to-us" {
+  name                      = "peer-${var.project_name}-${var.environment}-euw"
+  resource_group_name       = azurerm_resource_group.rg_eu.name
+  virtual_network_name      = azurerm_virtual_network.virtual_network_eu.name
+  remote_virtual_network_id = azurerm_virtual_network.virtual_network_us.id
+}
+
+resource "azurerm_virtual_network_peering" "us-to-eu" {
+  name                      = "peer-${var.project_name}-${var.environment}-usw"
+  resource_group_name       = azurerm_resource_group.rg_us.name
+  virtual_network_name      = azurerm_virtual_network.virtual_network_us.name
+  remote_virtual_network_id = azurerm_virtual_network.virtual_network_eu.id
+}
