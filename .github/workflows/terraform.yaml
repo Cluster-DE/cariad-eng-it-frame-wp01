@@ -8,10 +8,12 @@ jobs:
   terraform-init:
     name: terraform init
     runs-on: ubuntu-latest
+    environment: dev
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: terraform init
         uses: ./.github/actions/terraform-init
         with:
+          secrets: inherit
           working-directory: infrastructure
