@@ -1,4 +1,9 @@
-resource "azurerm_resource_group" "rg" {
-  name     = "rg-${var.project_name}-${var.environment}-${var.location_short}"
-  location = var.location
+resource "azurerm_resource_group" "rg_eu" {
+  name     = "rg-${var.project_name}-${var.environment}-euw"
+  location = "West Europe"
+}
+
+resource "azurerm_resource_group" "rg_us" {
+  name     = "rg-${var.project_name}-${var.environment}-usw"
+  location = "West US"
 }
