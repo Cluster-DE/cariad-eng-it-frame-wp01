@@ -27,3 +27,33 @@ jobs:
         run: |
           terraform init -upgrade=true -reconfigure -input=false -backend-config="resource_group_name=${{ vars.TF_STATE_RG_NAME }}" -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_NAME }}" -backend-config="container_name=${{ vars.TF_STATE_CONTAINER_NAME }}" -backend-config="key=dev.tfstate"
         shell: bash
+      - name: terraform plan
+        working-directory: infrastructure
+        shell: bash
+        run: |
+          export exitcode=0
+          terraform plan -var-file="dev.tfvars" -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+          
+          if [ $exitcode -eq 1 ]; then
+            echo Terraform Plan Failed!
+            exit 1
+          else 
+            exit 0
+          fi
+      - name: terraform plan string
+        working-directory: infrastructure
+        shell: bash
+        id: tf-plan-string
+        run: |
+          TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+          delimiter="$(openssl rand -hex 8)"
+          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+          echo "## Check Terraform Plan" >> $GITHUB_OUTPUT
+          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '```terraform' >> $GITHUB_OUTPUT
+          echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> $GITHUB_OUTPUT
