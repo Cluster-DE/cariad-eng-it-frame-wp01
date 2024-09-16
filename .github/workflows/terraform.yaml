@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           export exitcode=0
-          terraform plan -var-file="dev.tfvars" -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+          terraform plan -var-file="environment/dev/dev.tfvars" -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
           
           if [ $exitcode -eq 1 ]; then
