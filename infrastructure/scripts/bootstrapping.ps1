@@ -20,10 +20,10 @@ if (-not (Test-Path -Path "C:\CustomScriptExtensionLogs")) {
 Write-Log "Script execution started."
 
 # Define the URL for the .NET 8 runtime installer
-$dotnetInstallerUrl = "https://download.visualstudio.microsoft.com/download/pr/12345678-1234-1234-1234-1234567890ab/dotnet-runtime-8.0.0-win-x64.exe"
+$dotnetInstallerUrl = "https://download.visualstudio.microsoft.com/download/pr/b336ee1f-b26c-4a03-958e-1e8a0b3cbf3e/afdfe9f8130098cb759ea933c66806bb/aspnetcore-runtime-8.0.8-win-x64.exe"
 
 # Define the path to save the installer
-$installerPath = "C:\Temp\dotnet-runtime-8.0.0-win-x64.exe"
+$installerPath = "C:\Temp\aspnetcore-runtime-8.0.8-win-x64.exe"
 
 # Create the Temp directory if it doesn't exist
 if (-not (Test-Path -Path "C:\Temp")) {
@@ -50,7 +50,7 @@ try {
 
 # Verify the installation
 try {
-    $dotnetVersion = & "C:\Program Files\dotnet\dotnet.exe" --list-runtimes | Select-String "Microsoft.NETCore.App 8.0"
+    $dotnetVersion = & "C:\Program Files\dotnet\dotnet.exe" --list-runtimes | Select-String "Microsoft.NETCore.App 8.0.8"
     if ($dotnetVersion) {
         Write-Log "Verified .NET 8 runtime installation: $dotnetVersion"
     } else {
