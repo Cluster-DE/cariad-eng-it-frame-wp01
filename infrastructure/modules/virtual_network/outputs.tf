@@ -9,3 +9,7 @@ output "subnet_name"{
 output "vnet_name"{
   value = local.vnet_resource_name
 }
+
+output "subnet_id"{
+  value = azurerm_subnet.subnet.id
+}

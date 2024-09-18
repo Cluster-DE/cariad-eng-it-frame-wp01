@@ -81,6 +81,7 @@ module "vm_client1" {
   storage_account_name = module.storage_account.name
   storage_account_key  = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
+  storage_private_domain = module.storage_account.private_domain
   fileshare_name       = module.storage_account.fileshare_name
 
   depends_on = [
@@ -105,6 +106,7 @@ module "vm_client2"{
   storage_account_name = module.storage_account.name
   storage_account_key  = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
+  storage_private_domain = module.storage_account.private_domain
   fileshare_name       = module.storage_account.fileshare_name
 
 
@@ -121,4 +123,8 @@ module "storage_account" {
   resource_group_name = azurerm_resource_group.rg_eu.name
   location            = azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
+
+  subnet_id           = module.virtual_network_eu.subnet_id
+  us_vnet_id          = module.virtual_network_us.id
+  eu_vnet_id          = module.virtual_network_eu.id
 }

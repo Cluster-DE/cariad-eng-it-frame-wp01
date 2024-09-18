@@ -58,3 +58,8 @@ variable "fileshare_name" {
   type        = string
   description = "Name of the fileshare"
 }
+
+variable "storage_private_domain" {
+  type        = string
+  description = "Private domain of the storage account"
+}

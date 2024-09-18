@@ -13,11 +13,11 @@ locals{
 
   fileshare_ext_name = "mount_fileshare"
   fileshare_ext_resource_prefix = "ext"
-  fileshare_ext_resource_name = "${local.ext_resource_prefix}${var.resource_name_specifier}${local.fileshare_ext_name}"
+  fileshare_ext_resource_name = "${local.fileshare_ext_resource_prefix}${var.resource_name_specifier}${local.fileshare_ext_name}"
 
   bootstrapping_ext_name = "bootstrapping"
   bootstrapping_ext_resource_prefix = "ext"
-  bootstrapping_ext_resource_name = "${local.ext_resource_prefix}${var.resource_name_specifier}${local.bootstrapping_ext_name}"
+  bootstrapping_ext_resource_name = "${local.bootstrapping_ext_resource_prefix}${var.resource_name_specifier}${local.bootstrapping_ext_name}"
 }
 
 data "azurerm_virtual_network" "vnet" {
@@ -60,7 +60,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   name                = local.vm_resource_name
   resource_group_name = var.resource_group_name_us
   location            = var.location
-  size                = "Standard_B2s"
+  size                = "Standard_D2_v3" #optimized for storage
   admin_username      = "adminuser"
   admin_password      = azurerm_key_vault_secret.admin_password_secret.value
   network_interface_ids = [
@@ -106,35 +106,36 @@ resource "azurerm_virtual_machine_extension" "mount_fileshare" {
   type_handler_version = "1.9"
 
   protected_settings = jsonencode({
-  commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.mount_fileshare_script.rendered)}')) | Out-File -filepath mount_fileshare_script.ps1\"; powershell -ExecutionPolicy Unrestricted -File mount_fileshare_script.ps1 -storageAccountName '${data.template_file.mount_fileshare_script.vars.storageAccountName}' -storageAccountKey '${data.template_file.mount_fileshare_script.vars.storageAccountKey}' -fileshareName '${data.template_file.mount_fileshare_script.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.mount_fileshare_script.vars.storageAccountConnectionString}'"
+  commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1 -storageAccountName '${data.template_file.bootstrapping.vars.storageAccountName}' -storageAccountKey '${data.template_file.bootstrapping.vars.storageAccountKey}' -fileshareName '${data.template_file.bootstrapping.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.bootstrapping.vars.storageAccountConnectionString}' -storagePrivateDomain '${data.template_file.bootstrapping.vars.storagePrivateDomain}'"
   })
 
 }
 
-data "template_file" "mount_fileshare_script" {
-    template = "${file("${path.module}/../../scripts/mount_fileshare.ps1")}"
+data "template_file" "bootstrapping" {
+    template = "${file("${path.module}/../../scripts/bootstrapping.ps1")}"
     vars = {
         storageAccountName  = var.storage_account_name
         storageAccountKey  = var.storage_account_key
         fileshareName =  var.fileshare_name
         storageAccountConnectionString = var.storage_account_connection_string
+        storagePrivateDomain = var.storage_private_domain
   }
 }
 
-# Bootstrapping script to install dependencies
-data "template_file" "bootstrapping_script" {
-    template = "${file("${path.module}/../../scripts/bootstrapping.ps1")}"
-}
+# # Bootstrapping script to install dependencies
+# data "template_file" "bootstrapping_script" {
+#     template = "${file("${path.module}/../../scripts/bootstrapping.ps1")}"
+# }
 
-resource "azurerm_virtual_machine_extension" "bootstrapping" {
-  name                 = local.bootstrapping_ext_resource_name
-  virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
-  publisher            = "Microsoft.Compute"
-  type                 = "CustomScriptExtension"
-  type_handler_version = "1.9"
+# resource "azurerm_virtual_machine_extension" "bootstrapping" {
+#   name                 = local.bootstrapping_ext_resource_name
+#   virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
+#   publisher            = "Microsoft.Compute"
+#   type                 = "CustomScriptExtension"
+#   type_handler_version = "1.9"
 
-  protected_settings = jsonencode({
-  commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping_script.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1"
-  })
+#   protected_settings = jsonencode({
+#   commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping_script.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1"
+#   })
 
-}
+# }
