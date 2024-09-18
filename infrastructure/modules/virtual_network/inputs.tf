@@ -8,7 +8,7 @@ variable "location" {
   description = "Location of the resource group"
 }
 
-variable "resource_name_specifier"{
+variable "resource_name_specifier" {
   type        = string
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
 }

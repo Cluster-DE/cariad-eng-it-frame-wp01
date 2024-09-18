@@ -1,23 +1,23 @@
-locals{
-  vm_name = "cl${var.client_number}"
+locals {
+  vm_name            = "cl${var.client_number}"
   vm_resource_prefix = "vm"
-  vm_resource_name = "${local.vm_resource_prefix}${var.resource_name_specifier}${local.vm_name}"
+  vm_resource_name   = "${local.vm_resource_prefix}${var.resource_name_specifier}${local.vm_name}"
 
-  nic_name = local.vm_name
+  nic_name            = local.vm_name
   nic_resource_prefix = "nic"
-  nic_resource_name = "${local.nic_resource_prefix}${var.resource_name_specifier}${local.nic_name}"
+  nic_resource_name   = "${local.nic_resource_prefix}${var.resource_name_specifier}${local.nic_name}"
 
-  pip_name = local.vm_name
+  pip_name            = local.vm_name
   pip_resource_prefix = "pip"
-  pip_resource_name = "${local.pip_resource_prefix}${var.resource_name_specifier}${local.pip_name}"
+  pip_resource_name   = "${local.pip_resource_prefix}${var.resource_name_specifier}${local.pip_name}"
 
-  fileshare_ext_name = "mount_fileshare"
+  fileshare_ext_name            = "mount_fileshare"
   fileshare_ext_resource_prefix = "ext"
-  fileshare_ext_resource_name = "${local.fileshare_ext_resource_prefix}${var.resource_name_specifier}${local.fileshare_ext_name}"
+  fileshare_ext_resource_name   = "${local.fileshare_ext_resource_prefix}${var.resource_name_specifier}${local.fileshare_ext_name}"
 
-  bootstrapping_ext_name = "bootstrapping"
+  bootstrapping_ext_name            = "bootstrapping"
   bootstrapping_ext_resource_prefix = "ext"
-  bootstrapping_ext_resource_name = "${local.bootstrapping_ext_resource_prefix}${var.resource_name_specifier}${local.bootstrapping_ext_name}"
+  bootstrapping_ext_resource_name   = "${local.bootstrapping_ext_resource_prefix}${var.resource_name_specifier}${local.bootstrapping_ext_name}"
 }
 
 data "azurerm_virtual_network" "vnet" {
@@ -106,19 +106,19 @@ resource "azurerm_virtual_machine_extension" "mount_fileshare" {
   type_handler_version = "1.9"
 
   protected_settings = jsonencode({
-  commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1 -storageAccountName '${data.template_file.bootstrapping.vars.storageAccountName}' -storageAccountKey '${data.template_file.bootstrapping.vars.storageAccountKey}' -fileshareName '${data.template_file.bootstrapping.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.bootstrapping.vars.storageAccountConnectionString}' -storagePrivateDomain '${data.template_file.bootstrapping.vars.storagePrivateDomain}'"
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1 -storageAccountName '${data.template_file.bootstrapping.vars.storageAccountName}' -storageAccountKey '${data.template_file.bootstrapping.vars.storageAccountKey}' -fileshareName '${data.template_file.bootstrapping.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.bootstrapping.vars.storageAccountConnectionString}' -storagePrivateDomain '${data.template_file.bootstrapping.vars.storagePrivateDomain}'"
   })
 
 }
 
 data "template_file" "bootstrapping" {
-    template = "${file("${path.module}/../../scripts/bootstrapping.ps1")}"
-    vars = {
-        storageAccountName  = var.storage_account_name
-        storageAccountKey  = var.storage_account_key
-        fileshareName =  var.fileshare_name
-        storageAccountConnectionString = var.storage_account_connection_string
-        storagePrivateDomain = var.storage_private_domain
+  template = file("${path.module}/../../scripts/bootstrapping.ps1")
+  vars = {
+    storageAccountName             = var.storage_account_name
+    storageAccountKey              = var.storage_account_key
+    fileshareName                  = var.fileshare_name
+    storageAccountConnectionString = var.storage_account_connection_string
+    storagePrivateDomain           = var.storage_private_domain
   }
 }
 

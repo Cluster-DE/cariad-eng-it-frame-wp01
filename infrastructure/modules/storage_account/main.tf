@@ -2,22 +2,22 @@
 
 data "azurerm_client_config" "current" {}
 
-locals{
-  storage_name = "share"
+locals {
+  storage_name            = "share"
   storage_resource_prefix = "st"
-  storage_resource_name = "${local.storage_resource_prefix}${var.resource_name_specifier}${local.storage_name}"
+  storage_resource_name   = "${local.storage_resource_prefix}${var.resource_name_specifier}${local.storage_name}"
 
-  fileshare_name = "share"
+  fileshare_name            = "share"
   fileshare_resource_prefix = "fs"
-  fileshare_resource_name = "${local.fileshare_resource_prefix}${var.resource_name_specifier}${local.fileshare_name}"
+  fileshare_resource_name   = "${local.fileshare_resource_prefix}${var.resource_name_specifier}${local.fileshare_name}"
 
-  private_endpoint_name = "share"
+  private_endpoint_name            = "share"
   private_endpoint_resource_prefix = "pe"
-  private_endpoint_resource_name = "${local.private_endpoint_resource_prefix}${var.resource_name_specifier}${local.private_endpoint_name}"
+  private_endpoint_resource_name   = "${local.private_endpoint_resource_prefix}${var.resource_name_specifier}${local.private_endpoint_name}"
 
-  private_service_connection_name = "share"
+  private_service_connection_name            = "share"
   private_service_connection_resource_prefix = "psc"
-  private_service_connection_resource_name = "${local.private_service_connection_resource_prefix}${var.resource_name_specifier}${local.private_service_connection_name}"
+  private_service_connection_resource_name   = "${local.private_service_connection_resource_prefix}${var.resource_name_specifier}${local.private_service_connection_name}"
 }
 
 resource "azurerm_storage_account" "storage" {
