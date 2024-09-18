@@ -80,6 +80,7 @@ module "vm_client1" {
 
   storage_account_name = module.storage_account.name
   storage_account_key  = module.storage_account.key
+  storage_account_connection_string = module.storage_account.connection_string
   fileshare_name       = module.storage_account.fileshare_name
 
   depends_on = [
@@ -103,6 +104,7 @@ module "vm_client2"{
 
   storage_account_name = module.storage_account.name
   storage_account_key  = module.storage_account.key
+  storage_account_connection_string = module.storage_account.connection_string
   fileshare_name       = module.storage_account.fileshare_name
 
 

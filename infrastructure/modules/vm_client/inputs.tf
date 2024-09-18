@@ -49,6 +49,11 @@ variable "storage_account_key" {
   description = "Key of the storage account"
 }
 
+variable "storage_account_connection_string"{
+  type        = string
+  description = "Connection string of the storage account"
+}
+
 variable "fileshare_name" {
   type        = string
   description = "Name of the fileshare"
