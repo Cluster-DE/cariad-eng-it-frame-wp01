@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <PublishSingleFile>true</PublishSingleFile>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Azure.Storage.Files.Shares" Version="12.19.1" />
+      <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="files\file-example_PDF_0.5MB.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="files\file-example_PDF_1MB.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="files\file-example_PDF_2MB.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="files\file-example_PDF_4MB.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="files\file-example_PDF_10MB.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>
