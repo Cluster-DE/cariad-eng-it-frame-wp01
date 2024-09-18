@@ -21,6 +21,8 @@
         Connectivity between the VMs and file share
         Security Groups/Firewalls
 
+![](./architecture.drawio.png)
+
 ## IaC approach
     
 
