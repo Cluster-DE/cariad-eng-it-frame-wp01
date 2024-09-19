@@ -12,30 +12,33 @@
 
 ## Architecture Diagram
 
-    Include a high-level diagram that outlines the overall infrastructure, including:
-        VNet in Europe (with a file share)
-        VNet in the US (with multiple VMs)
-        Network Peering (or any other cross-region networking solution)
-        Connectivity between the VMs and file share
-        Security Groups/Firewalls
-
 ![](./architecture.drawio.png)
 
 ## IaC approach
     
     We are using Terraform for our IaC strategy. The goal is to create a modularized, secure deployment
 
-
-
 ## Resource Definitions
 
-Provide details on the actual resources created using Terraform:
+    VM-Clients
+    - VMs running with windows server, datacenter editio 2022. 
+    - VMs can be replicated however often is required
+    - Extensions are used, to ensure the mounting process & dependency management is run for each deployment
+    - Accesable with RDP
 
-    Europe VNet: Include the CIDR block, subnets, and other key configurations.
-    File Share Resource: Document the file share type (e.g., Azure File Share, AWS EFS, etc.), its size, performance tiers, and network accessibility.
-    US VNet: Include VM sizes, OS images, and configuration details.
-    Cross-region Networking: Explain how the VNets are connected (e.g., VNet Peering in Azure, VPN, etc.).
-    Security Settings: Describe any security group rules or firewall configurations.
+    Storageaccount:
+    - Standard storage account
+    - Has a file share, which we later mount to the VMs
+    - Private link to ensure security
+
+    Keyvault: 
+    -  Contains any secrets that we need along the way
+
+    VNET:
+    - We have two VNETs, one for each region. 
+    - VNETs are peered with each other
+    - We manage the firewall using SecurityGroups on the VNET level.
+    
 
 ## Networking and Connectivity
 
