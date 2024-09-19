@@ -49,7 +49,7 @@ try {
 }
 
 # Check if the file share is already mounted
-if (Test-Path -Path "\\$storagePrivateDomain\$fileshareName") {
+if (Test-Path -Path "Y:\") {
     Write-Log "File share already exists. Continuing with the script." $logFilePathFileshare
 } else {
     # Mount the file share
@@ -128,4 +128,4 @@ try {
 }
 
 # End logging
-Write-Log "Script execution completed." $logFilePath
+Write-Log "Script execution completed." $logFilePathBootstrapping

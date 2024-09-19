@@ -2,15 +2,13 @@
 
 ## Introduction
 
-    Project Overview: Describe the goal of the POC project (deploying infrastructure using Terraform, with one VNet in Europe containing a file share and another in the US with VMs that mount the file share).
-    Technical Objective: Explain the primary objective, including specific infrastructure components (VNet, file share, VMs) and regions involved.
+    The goal of this PoC is to showcase how to setup a high-performance cross-regional fileshare. 
 
 ## Prerequisites
 
-    Terraform: List the version of Terraform, along with any specific modules or plugins required.
-    Azure/AWS/GCP Setup (depending on the cloud provider): Describe any required accounts, permissions, and resource groups.
-    Networking Knowledge: Mention that understanding VNet peering or inter-region connectivity is required.
-    Other Tools: List any additional tools (CLI tools, API clients, etc.) needed to implement the solution.
+   - Terraform
+   - Azure CLI
+   - Powershell
 
 ## Architecture Diagram
 
@@ -23,6 +21,7 @@
 
 ## IaC approach
     
+    We are using Terraform for our IaC strategy. The goal is to create a modularized, secure deployment
 
 
 

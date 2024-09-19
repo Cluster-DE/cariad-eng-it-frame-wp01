@@ -124,7 +124,19 @@ module "storage_account" {
   location            = azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
 
-  subnet_id           = module.virtual_network_eu.subnet_id
+  eu_subnet_id           = module.virtual_network_eu.subnet_id
   us_vnet_id          = module.virtual_network_us.id
   eu_vnet_id          = module.virtual_network_eu.id
+}
+
+module "private_dns" {
+  source              = "./modules/private_dns"
+  resource_group_name = azurerm_resource_group.rg_eu.name
+  resource_name_specifier = module.common_naming.resource_name_specifier_eu
+  us_subnet_id           = module.virtual_network_us.subnet_id
+  eu_subnet_id           = module.virtual_network_eu.subnet_id
+  us_vnet_id          = module.virtual_network_us.id
+  eu_vnet_id          = module.virtual_network_eu.id
+  private_ip = module.storage_account.private_ip
+  storage_account_name = module.storage_account.name
 }
