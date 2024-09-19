@@ -8,36 +8,42 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Jobs;
 
-namespace Benchmark;
+namespace Benchmark.FileUpload;
 
 [SimpleJob(RunStrategy.ColdStart, RuntimeMoniker.Net80, warmupCount: 1, iterationCount: Constants.Measurement.IterationCount)]
 [Config(typeof(BenchmarkConfig))]
 [ArtifactsPath("BenchmarkDotNet.Artifacts")]
 public class FileUploadBase
 {
+    protected virtual string LocalFilePath => "";
+    
     private ShareClient _shareClient;
     private ShareDirectoryClient _shareDirectoryClient;
     
     [GlobalSetup]
     public async Task SetupAsync()
     {
-        var connectionString = Environment.GetEnvironmentVariable(Constants.AzureFileShare.ConnectionStringName);
+        var connectionString = Environment.GetEnvironmentVariable(Constants.AzureFileShare.ConnectionStringEnvVarName);
         
         _shareClient = new ShareClient(connectionString, Constants.AzureFileShare.ShareName);
         await _shareClient.CreateIfNotExistsAsync();
         
-        var dirNameWithDateTime = $"{DateTime.Now:yyyyMMdd_HHmmss}";
+        Console.WriteLine("Setup of ShareClient completed");
+        
+        var dirNameWithDateTime = $"{DateTime.Now:yyyyMMdd_HHmmss}-{Guid.NewGuid()}";
         
         _shareDirectoryClient = _shareClient.GetDirectoryClient(dirNameWithDateTime);
         await _shareDirectoryClient.CreateIfNotExistsAsync();
+        
+        Console.WriteLine("Setup of ShareDirectoryClient completed");
     }
 
-    protected async Task UploadFileAsync(string filePath, string fileNamePrefix)
+    protected async Task UploadFileAsync()
     {
         const int maxChunkSize = 4 * 1024 * 1024; // 4MB
-        var fileClient = _shareDirectoryClient.GetFileClient($"{fileNamePrefix}-{Guid.NewGuid()}.pdf");
+        var fileClient = _shareDirectoryClient.GetFileClient($"{Guid.NewGuid()}.pdf");
     
-        await using var stream = File.OpenRead(filePath);
+        await using var stream = File.OpenRead(LocalFilePath);
         await fileClient.CreateAsync(stream.Length);
 
         var fileOffset = 0L;
@@ -54,7 +60,7 @@ public class FileUploadBase
         }
     }
     
-    protected async Task UploadFileParallelAsync(string filePath, string fileNamePrefix)
+    protected async Task UploadFileParallelAsync()
     {
         var tasks = new List<Task>();
 
@@ -62,7 +68,7 @@ public class FileUploadBase
         {
             tasks.Add(Task.Run(async () =>
             {
-                await UploadFileAsync(filePath, fileNamePrefix);
+                await UploadFileAsync();
             }));
         }
 

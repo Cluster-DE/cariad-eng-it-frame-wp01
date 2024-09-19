@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Order;
 
 namespace Benchmark;
 
