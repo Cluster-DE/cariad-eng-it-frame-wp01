@@ -13,6 +13,6 @@ public static class Constants
     {
         public const int DegreeOfParallelism = 10;
 
-        public const int IterationCount = 10;
+        public const int IterationCount = 50;
     }
 }
