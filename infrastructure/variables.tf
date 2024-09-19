@@ -13,13 +13,13 @@ variable "environment" {
   description = "Environment of the resource group"
 }
 
-variable "location_short_eu"{
-  type      = string
+variable "location_short_eu" {
+  type        = string
   description = "Short version of location of the resource group for EU"
 }
 
-variable "location_short_us"{
-  type      = string
+variable "location_short_us" {
+  type        = string
   description = "Short version of location of the resource group for US"
 }
 

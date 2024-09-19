@@ -1,15 +1,15 @@
-locals{
-  vnet_name = "network"
+locals {
+  vnet_name            = "network"
   vnet_resource_prefix = "vnet"
-  vnet_resource_name = "${local.vnet_resource_prefix}${var.resource_name_specifier}${local.vnet_name}"
+  vnet_resource_name   = "${local.vnet_resource_prefix}${var.resource_name_specifier}${local.vnet_name}"
 
-  subnet_name = local.vnet_name
+  subnet_name            = local.vnet_name
   subnet_resource_prefix = "snet"
-  subnet_resource_name = "${local.subnet_resource_prefix}${var.resource_name_specifier}${local.subnet_name}"
+  subnet_resource_name   = "${local.subnet_resource_prefix}${var.resource_name_specifier}${local.subnet_name}"
 
-  nsg_name = local.vnet_name
+  nsg_name            = local.vnet_name
   nsg_resource_prefix = "nsg"
-  nsg_resource_name = "${local.nsg_resource_prefix}${var.resource_name_specifier}${local.nsg_name}"
+  nsg_resource_name   = "${local.nsg_resource_prefix}${var.resource_name_specifier}${local.nsg_name}"
 }
 
 resource "azurerm_network_security_group" "network_security_group" {

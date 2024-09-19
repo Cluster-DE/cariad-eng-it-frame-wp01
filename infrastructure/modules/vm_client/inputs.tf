@@ -14,12 +14,12 @@ variable "location" {
   description = "Location of the resource group"
 }
 
-variable "resource_name_specifier"{
+variable "resource_name_specifier" {
   type        = string
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
 }
 
-variable "client_number"{
+variable "client_number" {
   type        = number
   description = "Client number"
 }
@@ -49,7 +49,7 @@ variable "storage_account_key" {
   description = "Key of the storage account"
 }
 
-variable "storage_account_connection_string"{
+variable "storage_account_connection_string" {
   type        = string
   description = "Connection string of the storage account"
 }

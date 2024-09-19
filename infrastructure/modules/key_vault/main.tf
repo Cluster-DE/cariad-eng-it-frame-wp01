@@ -2,10 +2,10 @@
 
 data "azurerm_client_config" "current" {}
 
-locals{
-  keyvault_name = "secrets"
+locals {
+  keyvault_name            = "secrets"
   keyvault_resource_prefix = "kv"
-  keyvault_resource_name = "${local.keyvault_resource_prefix}${var.resource_name_specifier}${local.keyvault_name}"
+  keyvault_resource_name   = "${local.keyvault_resource_prefix}${var.resource_name_specifier}${local.keyvault_name}"
 }
 
 resource "azurerm_key_vault" "kv" {

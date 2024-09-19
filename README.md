@@ -19,6 +19,8 @@
         Connectivity between the VMs and file share
         Security Groups/Firewalls
 
+![](./architecture.drawio.png)
+
 ## IaC approach
     
     We are using Terraform for our IaC strategy. The goal is to create a modularized, secure deployment
