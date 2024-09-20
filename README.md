@@ -2,7 +2,7 @@
 
 ## Introduction
 
-    The goal of this PoC is to showcase how to setup a high-performance cross-regional fileshare. 
+    This project automates the provisioning of infrastructure using Terraform and bootstraps virtual machines (VMs) using a PowerShell script. The bootstrapping includes a process, which mounts a fileshare onto the virtual machine. The infrastructure includes resources across two regions: the EU and the US. The VMs are configured to access an Azure file share using private links and have the necessary software dependencies installed (e.g., .NET SDK).
 
 ## Prerequisites
 
@@ -17,6 +17,41 @@
 ## IaC approach
 
     We are using Terraform for our IaC strategy. The goal is to create a modularized, secure deployment
+
+Terraform Code Structure
+
+Resource Naming: The Terraform code uses locals to define the resource names based on the environment, project, and location.
+    EU Resource Name: ${var.environment}${var.project_short_name}${var.location_short_eu}
+    US Resource Name: ${var.environment}${var.project_short_name}${var.location_short_us}
+    
+
+Key Variables:
+- var.environment: Defines the environment (e.g., dev, prod).
+- var.project_short_name: A short identifier for the project.
+- var.location_short_eu: Short identifier for the EU region.
+- var.location_short_us: Short identifier for the US region.
+
+Purpose
+
+    The Terraform file standardizes resource naming across regions, ensuring that infrastructure in both regions follows a consistent naming convention for easier management and identification.
+
+    Modular approach: We created several terraform modules to ensure clean & maintainable code. 
+
+    Each module consists of three files:
+    1. *inputs.tf* - contains all variables neccesary for the module
+    2. *main.tf* - contains all resource deployments
+    3. *outputs.tf* contains all variables, which we need in other modules
+    
+    The structure is as follows
+    - main.tf
+    - terraform.tfvars (only used for local development, can be created manually. Is handled by gitignore to not be checked in, as it contains secrets)
+    modules
+        module_1
+        module_,,
+        module_x
+            inputs.tf
+            main.tf
+            outputs.tf
 
 ## Resource Definitions
 
@@ -38,29 +73,78 @@
     - We have two VNETs, one for each region. 
     - VNETs are peered with each other
     - We manage the firewall using SecurityGroups on the VNET level.
-    
+
+## VM Bootstrapping with PowerShell
+
+*Script Overview*
+
+The PowerShell script is executed on virtual machines to handle:
+
+    Logging key actions for auditing and debugging purposes.
+    Setting up the credentials to access an Azure file share.
+    Installing the .NET 8 SDK, if not already present.
+
+Parameters
+
+The script accepts several input parameters for customization:
+
+    $storageAccountName: The name of the Azure Storage account.
+    $storageAccountKey: The key to access the storage account.
+    $storagePrivateDomain: The private domain for the storage account (used for private endpoints).
+    $fileshareName: The name of the file share in the storage account.
+    $storageAccountConnectionString: The connection string for the storage account.
+
+Logging
+
+    Log File Paths:
+        Bootstrapping log: C:\CustomScriptExtensionLogs\bootstrapping.log
+        File share log: C:\CustomScriptExtensionLogs\fileshare.log
+    Write-Log Function: The script includes a custom logging function to write timestamped log entries to the appropriate log files.
+
+Credential and File Share Setup
+
+    Set Connection String: The script sets the STORAGE_ACCOUNT_CONNECTION_STRING environment variable using the connection string parameter. This connection string is used by our benchmarking tool.
+    Add Credentials: It stores the credentials using cmdkey so that they persist across reboots.
+    Mount File Share: The script checks whether the Azure file share is already mounted. If not, it mounts the file share using the provided credentials.
 
 ## Networking and Connectivity
 
-    Peering/VPN: Provide detailed steps on setting up VNet peering (or a VPN) to ensure the VMs in the US can communicate with the file share in Europe.
-    DNS Resolution: Describe how DNS will resolve the file share’s address from the VMs in the US.
-    Latency Considerations: Address any cross-region latency issues that might affect the mounting of the file share.
+VNet Peering
 
-## Benchmarking & Testing
+The project provisions two Virtual Networks (VNets), one in the EU region and one in the US region. These VNets are peered to enable secure communication between resources in both regions without relying on the public internet.
 
-    Mounting File Share: Provide detailed steps on how to mount the file share on the VMs, including any necessary credentials or commands.
-    File Share Access: Explain how to test that the VMs can successfully read/write to the file share.
-    Connectivity Testing: Provide steps for testing cross-region connectivity (e.g., ping, traceroute, etc.).
+    VNet A (EU): Contains the primary storage account with the Azure file share.
+    VNet B (US): Hosts virtual machines that connect to the file share in VNet A via private endpoints.
+
+Private Link for Storage Account
+
+A key aspect of this project's security and network design is the use of Azure Private Link to securely connect resources to the storage account without exposing it to the public internet.
+
+    Private Endpoints: The storage account in VNet A is accessible to VMs in VNet B via Private Link, which creates private endpoints. This ensures that the file share is accessible through internal networks only.
+
+DNS Configuration
+
+For Private Link to work seamlessly, proper DNS configuration is necessary to resolve the storage account's private endpoint domain name within the VNets.
+
+    Private DNS Zone: A private DNS zone is associated with both VNets to resolve the private domain name of the storage account. The VMs in both VNets use this private DNS zone to reach the storage account via its private endpoint.
+
+VM File Share Connectivity
+
+    The PowerShell script sets up the VMs in VNet B to mount the file share located in VNet A using the Private Link configuration.
+    The script ensures that the credentials for accessing the storage account are stored securely and persist across reboots.
 
 ## Troubleshooting
 
-    Common Issues: List potential issues like peering misconfigurations, file share mounting issues, or firewall blocking, and provide solutions.
-    Logs & Debugging: Include information on where to find logs and how to debug Terraform deployment errors or connectivity problems.
+Log Files:
 
-## Conclusion
+    Bootstrapping log: Captures details about the .NET SDK installation process and other bootstrapping activities.
+    File share log: Logs actions related to mounting the Azure file share and setting up credentials.
 
-    Summary of Setup: Recap the infrastructure deployed and its success.
-    Next Steps: Mention any future enhancements (e.g., setting up monitoring, scaling the solution, etc.).
+Common Issues:
+
+    Failed to Set Credentials: Check the file share log if there are issues with credential management.
+    File Share Not Mounted: Ensure that the private link and network configurations are correct if the file share cannot be mounted.
+    .NET SDK Not Installed: Review the bootstrapping log for any download or installation failures during the .NET SDK setup.
 
 ## Ansible playbook configuration
 
