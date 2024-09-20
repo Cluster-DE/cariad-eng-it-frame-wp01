@@ -50,6 +50,8 @@ resource "azurerm_virtual_network_peering" "eu-to-us" {
   resource_group_name       = azurerm_resource_group.rg_eu.name
   virtual_network_name      = module.virtual_network_eu.vnet_name
   remote_virtual_network_id = module.virtual_network_us.id
+  allow_forwarded_traffic = true
+  allow_virtual_network_access = true
 }
 
 resource "azurerm_virtual_network_peering" "us-to-eu" {
@@ -57,6 +59,8 @@ resource "azurerm_virtual_network_peering" "us-to-eu" {
   resource_group_name       = azurerm_resource_group.rg_us.name
   virtual_network_name      = module.virtual_network_us.vnet_name
   remote_virtual_network_id = module.virtual_network_eu.id
+  allow_forwarded_traffic = true
+  allow_virtual_network_access = true
 }
 
 module "key_vault" {
@@ -129,14 +133,14 @@ module "storage_account" {
   eu_vnet_id          = module.virtual_network_eu.id
 }
 
-module "private_dns" {
-  source              = "./modules/private_dns"
-  resource_group_name = azurerm_resource_group.rg_eu.name
-  resource_name_specifier = module.common_naming.resource_name_specifier_eu
-  us_subnet_id           = module.virtual_network_us.subnet_id
-  eu_subnet_id           = module.virtual_network_eu.subnet_id
-  us_vnet_id          = module.virtual_network_us.id
-  eu_vnet_id          = module.virtual_network_eu.id
-  private_ip = module.storage_account.private_ip
-  storage_account_name = module.storage_account.name
-}
+# module "private_dns" {
+#   source              = "./modules/private_dns"
+#   resource_group_name = azurerm_resource_group.rg_eu.name
+#   resource_name_specifier = module.common_naming.resource_name_specifier_eu
+#   us_subnet_id           = module.virtual_network_us.subnet_id
+#   eu_subnet_id           = module.virtual_network_eu.subnet_id
+#   us_vnet_id          = module.virtual_network_us.id
+#   eu_vnet_id          = module.virtual_network_eu.id
+#   private_ip = module.storage_account.private_ip
+#   storage_account_name = module.storage_account.name
+# }
