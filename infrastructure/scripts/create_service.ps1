@@ -94,15 +94,6 @@ try {
     exit 1
 }
 
-
-
-# Additional logic to use the new parameters
-Write-Log "Storage Account Name: $storageAccountName"
-Write-Log "Storage Account Key: $storageAccountKey"
-Write-Log "Storage Private Domain: $storagePrivateDomain"
-Write-Log "File Share Name: $fileshareName"
-Write-Log "Storage Account Connection String: $storageAccountConnectionString"
-
 # Step 1: Define the base path to the Downloads directory
 $DownloadsBasePath = "C:\Packages\Plugins\Microsoft.Compute.CustomScriptExtension\1.10.18\Downloads"
 
