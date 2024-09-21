@@ -52,10 +52,6 @@ function Install-PowerShell {
 
     Write-Log "PowerShell 7.4.5 installation complete. Cleaning up."
     Remove-Item $pwshInstallerPath -Force
-
-    # Optionally, restart the system to apply changes (if required)
-    # Write-Log "Restarting system to apply changes."
-    # Restart-Computer -Force
 }
 
 
@@ -67,15 +63,10 @@ if (-not (Check-PowerShellVersion)) {
     Write-Log "No update necessary, PowerShell 7.4.5 is already installed."
 }
 
-# Log file path
-$logFileStdout = "C:\\CustomScriptExtensionLogs\\service_output.log"
-$logFileStderr = "C:\\CustomScriptExtensionLogs\\service_error.log"
-
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
     New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
 }
-
 
 # Until private link doesnt work, set it to the default value
 $storagePrivateDomain = "$storageAccountName.file.core.windows.net"
@@ -144,25 +135,17 @@ if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
     Start-Sleep -Seconds 5
 }
 
-$password = "PhnLoD25ViHIrC"
-$username = "vmdevcfuswcl1\adminuser"
-# Step 5: Create a new Windows service to run the script at startup
-$securePassword = ConvertTo-SecureString $password -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential($username, $securePassword)
-Write-Log "Creating credentials for the service account. Password before securestring: $Password. Password after securestring $securePassword. $Username, $logFilePathCreateService "
 
-Write-Log "Running command to create service. Destination file: $DestinationFile. Storage Account Name: $storageAccountName. Storage Account Key: $storageAccountKey. Storage Private Domain: $storagePrivateDomain. File Share Name: $fileshareName. Storage Account Connection String: $storageAccountConnectionString"
-$binaryPath = "powershell.exe -ExecutionPolicy Unrestricted -File $DestinationFile -storageAccountName $storageAccountName -storageAccountKey $storageAccountKey -storagePrivateDomain $storagePrivateDomain -fileshareName $fileshareName -storageAccountConnectionString $storageAccountConnectionString 1>> $logFileStdout 2>> $logFileStderr"
+Write-Log "Creating shortcut for script in Startup folder."
 
-New-Service `
-    -Name $ServiceName `
-    -BinaryPathName $binaryPath `
-    -DisplayName $ServiceDescription `
-    -Description $ServiceDescription `
-    -StartupType Automatic `
-    -Credential $credential
+# Define the Startup folder path
+$startupFolder = "C:\users\$Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
 
+# Create the shortcut
+$WshShell = New-Object -ComObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("$startupFolder\$DownloadedFile.lnk")
+$Shortcut.TargetPath = "Powershell.exe"
+$Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$ScriptPath`""
+$Shortcut.Save()
 
-
-# Start the service immediately
-Start-Service -Name $ServiceName
+Write-Log "Shortcut created in Startup folder."

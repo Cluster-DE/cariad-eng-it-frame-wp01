@@ -1,10 +1,12 @@
 param (
-    [string]$storageAccountName,
-    [string]$storageAccountKey,
-    [string]$storagePrivateDomain,
-    [string]$fileshareName,
-    [string]$storageAccountConnectionString
+    [string]$storageAccountName = "",
+    [string]$storageAccountKey = "",
+    [string]$storagePrivateDomain = "",
+    [string]$fileShareName = "",
+    [string]$storageAccountConnectionString = ""
 )
+
+$ErrorActionPreference = "Stop"
 
 # Function to write log
 function Write-Log {
@@ -17,13 +19,21 @@ function Write-Log {
     Add-Content -Path $logFilePath -Value $logMessage
 }
 
-# Fetch values from environment variables if not provided as parameters
-$storageAccountName = $storageAccountName -or (Get-Item -Path Env:STORAGE_ACCOUNT_NAME).Value
-$storageAccountKey = $storageAccountKey -or (Get-Item -Path Env:STORAGE_ACCOUNT_KEY).Value
-$storagePrivateDomain = $storagePrivateDomain -or (Get-Item -Path Env:STORAGE_PRIVATE_DOMAIN).Value
-$fileshareName = $fileshareName -or (Get-Item -Path Env:FILESHARE_NAME).Value
-$storageAccountConnectionString = $storageAccountConnectionString -or (Get-Item -Path Env:STORAGE_ACCOUNT_CONNECTION_STRING).Value
-
+if ($env:STORAGE_ACCOUNT_NAME) {
+    $storageAccountName = $env:STORAGE_ACCOUNT_NAME
+}
+if ($env:STORAGE_ACCOUNT_KEY) {
+    $storageAccountKey = $env:STORAGE_ACCOUNT_KEY
+}
+if ($env:STORAGE_PRIVATE_DOMAIN) {
+    $storagePrivateDomain = $env:STORAGE_PRIVATE_DOMAIN
+}
+if ($env:FILE_SHARE_NAME) {
+    $fileShareName = $env:FILE_SHARE_NAME
+}
+if ($env:STORAGE_ACCOUNT_CONNECTION_STRING) {
+    $storageAccountConnectionString = $env:STORAGE_ACCOUNT_CONNECTION_STRING
+}
 
 # Log file path
 $logFilePathBootstrapping = "C:\\CustomScriptExtensionLogs\\bootstrapping.log"
@@ -44,19 +54,14 @@ if (Test-Path -Path "$($mountDriveLetter):\") {
     Write-Log "File share already exists. Continuing with the script." $logFilePathFileshare
 } else {
     # Mount the file share
-    try {
+    # Create PSCredential object
+    $user = "localhost\$storageAccountName"
+    $shareEndpoint = "\\$storageAccountName.file.core.windows.net\$fileShareName"
 
-        $fileshareLocation = "\\$storageAccountName.file.core.windows.net\$fileShareName"
+    # Using net use to mount the Azure file share
+    $netUseCommand = "net use $($mountDriveLetter): $shareEndpoint /user:$user $storageAccountKey /persistent:yes"
+    Invoke-Expression $netUseCommand
 
-        # Using net use to mount the Azure file share
-        $netUseCommand = "net use $mountDriveLetter $fileshareLocation /user:`"localhost\$storageAccountName` $storageAccountKey" 
-        $output = cmd.exe /c $netUseCommand
-
-        Write-Log "Attempted to mount the file share. Message: $output" $logFilePathFileshare
-    } catch {
-        Write-Log "Failed to mount the file share: $_" $logFilePathFileshare
-        exit 1
-    }
 
     # Verify the mount
     if (Test-Path -Path "$($mountDriveLetter):\") {
