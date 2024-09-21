@@ -24,19 +24,9 @@ variable "client_number" {
   description = "Client number"
 }
 
-variable "vnet_name" {
+variable "subnet_id" {
   type        = string
-  description = "Name of the virtual network, which the VMs will be connected to"
-}
-
-variable "subnet_name" {
-  type        = string
-  description = "subnet name"
-}
-
-variable "key_vault_name" {
-  type        = string
-  description = "Name of the key vault"
+  description = "ID of the subnet, which the VMs will be connected to"
 }
 
 variable "storage_account_name" {
@@ -79,7 +69,17 @@ variable "scripts_container_name"{
   description = "Name of the container for the scripts"
 }
 
-variable "script_file_md5"{
+variable "bootstrapping_md5"{
   type        = string
-  description = "MD5 hash of the script file"
+  description = "MD5 hash of the bootstrapping script file"
+}
+
+variable "create_service_md5"{
+  type        = string
+  description = "MD5 hash of the create service script file"
+}
+
+variable "key_vault_id"{
+  type        = string
+  description = "ID of the key vault"
 }

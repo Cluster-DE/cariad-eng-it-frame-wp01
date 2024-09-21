@@ -12,12 +12,13 @@ $ErrorActionPreference = "Stop"
 function Write-Log {
     param (
         [string]$message,
-        [string]$logFilePath
+        [string]$logLevel = "INFO"
     )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "$timestamp - $message"
-    Add-Content -Path $logFilePath -Value $logMessage
+    $logMessage = "$timestamp [$logLevel] - $message"
+    Add-Content -Path "C:\\CustomScriptExtensionLogs\\bootstrapping.log" -Value $logMessage
 }
+
 
 if ($env:STORAGE_ACCOUNT_NAME) {
     $storageAccountName = $env:STORAGE_ACCOUNT_NAME
@@ -36,8 +37,6 @@ if ($env:STORAGE_ACCOUNT_CONNECTION_STRING) {
 }
 
 # Log file path
-$logFilePathBootstrapping = "C:\\CustomScriptExtensionLogs\\bootstrapping.log"
-$logFilePathFileshare = "C:\\CustomScriptExtensionLogs\\fileshare.log"
 $mountDriveLetter = "Y"
 
 # Create log directory if it doesn't exist
@@ -46,28 +45,30 @@ if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
 }
 
 # Start logging
-Write-Log "Script execution started." $logFilePathBootstrapping
+Write-Log "Script execution started." "INFO"
 
 
 # Check if the file share is already mounted
 if (Test-Path -Path "$($mountDriveLetter):\") {
-    Write-Log "File share already exists. Continuing with the script." $logFilePathFileshare
+    Write-Log "File share already exists. Continuing with the script." "INFO"
 } else {
-    # Mount the file share
-    # Create PSCredential object
     $user = "localhost\$storageAccountName"
     $shareEndpoint = "\\$storageAccountName.file.core.windows.net\$fileShareName"
 
-    # Using net use to mount the Azure file share
-    $netUseCommand = "net use $($mountDriveLetter): $shareEndpoint /user:$user $storageAccountKey /persistent:yes"
-    Invoke-Expression $netUseCommand
-
+    try{
+        # Using net use to mount the Azure file share
+        $netUseCommand = "net use $($mountDriveLetter): $shareEndpoint /user:$user $storageAccountKey /persistent:yes"
+        Invoke-Expression $netUseCommand
+    }catch{
+        Write-Log "Failed to mount the file share: $_" "ERROR"
+        exit 1
+    }
 
     # Verify the mount
     if (Test-Path -Path "$($mountDriveLetter):\") {
-        Write-Log "File share mounted successfully at $($mountDriveLetter):\" $logFilePathFileshare
+        Write-Log "File share mounted successfully at $($mountDriveLetter):\" "INFO"
     } else {
-        Write-Log "Failed to mount the file share." $logFilePathFileshare
+        Write-Log "Failed to mount the file share." "ERROR"
         exit 1
     }
 }
@@ -89,28 +90,28 @@ if (-not (Test-Path -Path "C:\Temp")) {
 try {
     $dotnetVersion = & "C:\Program Files\dotnet\dotnet.exe" --list-sdks | Select-String "8.0.401"
     if ($dotnetVersion) {
-        Write-Log ".NET 8 SDK is already installed: $dotnetVersion" $logFilePathBootstrapping
+        Write-Log ".NET 8 SDK is already installed: $dotnetVersion" 
         exit 0
     }
 } catch {
-    Write-Log ".NET 8 SDK missing. Installing now: $_" $logFilePathBootstrapping
+    Write-Log ".NET 8 SDK missing. Installing now: $_" 
 }
 
 # Download the .NET 8 SDK installer
 try {
     Invoke-WebRequest -Uri $dotnetInstallerUrl -OutFile $installerPath
-    Write-Log "Downloaded .NET 8 SDK installer." $logFilePathBootstrapping
+    Write-Log "Downloaded .NET 8 SDK installer." 
 } catch {
-    Write-Log "Failed to download .NET 8 SDK installer: $_" $logFilePathBootstrapping
+    Write-Log "Failed to download .NET 8 SDK installer: $_" 
     exit 1
 }
 
 # Install the .NET 8 SDK
 try {
     Start-Process -FilePath $installerPath -ArgumentList "/quiet", "/norestart" -Wait
-    Write-Log "Installed .NET 8 SDK." $logFilePathBootstrapping
+    Write-Log "Installed .NET 8 SDK." 
 } catch {
-    Write-Log "Failed to install .NET 8 SDK: $_" $logFilePathBootstrapping
+    Write-Log "Failed to install .NET 8 SDK: $_" 
     exit 1
 }
 
@@ -118,15 +119,15 @@ try {
 try {
     $dotnetVersion = & "C:\Program Files\dotnet\dotnet.exe" --list-sdks | Select-String "8.0.401"
     if ($dotnetVersion) {
-        Write-Log "Verified .NET 8 SDK installation: $dotnetVersion" $logFilePathBootstrapping
+        Write-Log "Verified .NET 8 SDK installation: $dotnetVersion" 
     } else {
-        Write-Log "Failed to verify .NET 8 SDK installation." $logFilePathBootstrapping
+        Write-Log "Failed to verify .NET 8 SDK installation." 
         exit 1
     }
 } catch {
-    Write-Log "Failed to verify .NET 8 SDK installation: $_" $logFilePathBootstrapping
+    Write-Log "Failed to verify .NET 8 SDK installation: $_" 
     exit 1
 }
 
 # End logging
-Write-Log "Script execution completed." $logFilePathBootstrapping
+Write-Log "Script execution completed." 

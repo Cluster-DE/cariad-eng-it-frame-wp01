@@ -1,10 +1,7 @@
 param (
     [string]$DownloadedFile,          # Path to the downloaded setup script (setup_script.ps1)
     [string]$DestinationFolder = "C:\scripts",  # Directory to copy the file to (default C:\scripts)
-    [string]$ServiceName = "RunSetupScriptService",  # Service name
-    [string]$ServiceDescription = "Service to run setup_script.ps1 at startup",  # Description of the service
     [string]$Username,                # Username to run the service
-    [string]$Password,                 # Password for the service account
     [string]$storageAccountName,
     [string]$storageAccountKey,
     [string]$storagePrivateDomain,
@@ -20,7 +17,7 @@ function Write-Log {
         [string]$logLevel = "INFO"
     )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "$timestamp [$level] - $message"
+    $logMessage = "$timestamp [$logLevel] - $message"
     Add-Content -Path "C:\\CustomScriptExtensionLogs\\create_service.log" -Value $logMessage
 }
 
@@ -36,8 +33,12 @@ $storagePrivateDomain = "$storageAccountName.file.core.windows.net"
 try {
     Write-Log "Setting environment variables for bootstrapping script." "INFO"
 
-    # GET SID. Currently when running a clean deployment, the SID is available, but the registry is not done building the folder Environment.
+    # GET SID. SID is available, but the processes creating REGISTRY entries are not created until the user logs in.
+    # Currently we have the requirement for the user to log in first, before this process works. 
+    # Due to time constraints, we were not able to fix this, but this would be solvable.
     $sid = (Get-WmiObject win32_useraccount -Filter "Name='$Username'").SID
+
+
 
     # Use Registry to directly set the environment variable for future processes
     Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_CONNECTION_STRING' -Value $storageAccountConnectionString -Type String
@@ -52,7 +53,6 @@ try {
     Write-Log "Failed to set environment variable: $_" "ERROR"
     exit 1
 }
-
 
 try{
     # Download from script extension download path. 
@@ -79,7 +79,7 @@ try{
 
     Copy-Item -Path $DownloadedFilePath -Destination $DestinationFile -Force
 
-    Write-Log "Copied $DownloadedFile to $DestinationFile\n" "INFO"
+    Write-Log "Copied $DownloadedFile to $DestinationFile" "INFO"
 
 }catch{
     Write-Log "Failed to copy file: $_" "ERROR"
@@ -90,15 +90,23 @@ try{
     # Define the Startup folder path
     $startupFolder = "C:\users\$Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
 
+    # Remove existing shortcut, if there is one
+    if(Test-Path "$startupFolder\$DownloadedFile.lnk"){
+        Remove-Item "$startupFolder\$DownloadedFile.lnk"
+    }
+
     # Create the shortcut
     $WshShell = New-Object -ComObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut("$startupFolder\$DownloadedFile.lnk")
     $Shortcut.TargetPath = "Powershell.exe"
-    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$DestinationFolder\$DownloadedFile`""
+    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$DestinationFolder\$DownloadedFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -storagePrivateDomain `"$storagePrivateDomain`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
     $Shortcut.Save()
-
+    
     Write-Log "Shortcut created in Startup folder." "INFO"
 }catch{
     Write-Log "Failed to create shortcut: $_" "ERROR"
     exit 1
 }
+
+# This is a bit extreme, maybe could work on a better solution
+Restart-Computer -Force    

@@ -1,140 +1,120 @@
-# Multi-client file share
 
-## Introduction
+# Multi-Region File Share Solution
 
-This project automates the provisioning of infrastructure using Terraform and bootstraps virtual machines (VMs) using a PowerShell script. The bootstrapping includes a process, which mounts a fileshare onto the virtual machine. The infrastructure includes resources across two regions: the EU and the US. The VMs are configured to access an Azure file share using private links and have the necessary software dependencies installed (e.g., .NET SDK).
+## Overview
 
-## Prerequisites
+This project automates infrastructure deployment using Terraform and sets up virtual machines (VMs) with a PowerShell-based bootstrapping process. This process mounts an Azure file share onto VMs, ensuring secure cross-region connectivity using Azure Private Link. Resources span two regions: Europe (EU) and the United States (US), and all VMs are equipped with essential software dependencies (e.g., .NET SDK).
 
-- Terraform
-- Azure CLI
-- Powershell
+## Requirements
 
-## Architecture Diagram
+- **Terraform**
+- **Azure CLI**
+- **PowerShell**
+
+## Solution Architecture
 
 ![](./architecture.drawio.png)
 
-## IaC approach
+## Infrastructure as Code (IaC)
 
-    We are using Terraform for our IaC strategy. The goal is to create a modularized, secure deployment
+We leverage **Terraform** to automate and modularize the deployment of resources, adhering to best practices for security and maintainability.
 
-Terraform Code Structure
+**Terraform Structure and Naming Conventions:**
 
-Resource Naming: The Terraform code uses locals to define the resource names based on the environment, project, and location.
-    EU Resource Name: ${var.environment}${var.project_short_name}${var.location_short_eu}
-    US Resource Name: ${var.environment}${var.project_short_name}${var.location_short_us}
-    
+Resources follow a standardized naming pattern based on the environment and region:
+- **EU Resources:** \${var.environment}\${var.project_short_name}\${var.location_short_eu}
+- **US Resources:** \${var.environment}\${var.project_short_name}\${var.location_short_us}
 
-Key Variables:
-- var.environment: Defines the environment (e.g., dev, prod).
-- var.project_short_name: A short identifier for the project.
-- var.location_short_eu: Short identifier for the EU region.
-- var.location_short_us: Short identifier for the US region.
+### Key Variables:
+- `var.environment`: Specifies the environment (e.g., dev, prod).
+- `var.project_short_name`: Abbreviated project identifier.
+- `var.location_short_eu`: Short code for the EU region.
+- `var.location_short_us`: Short code for the US region.
 
-Purpose
+### Modular Design
 
-    The Terraform file standardizes resource naming across regions, ensuring that infrastructure in both regions follows a consistent naming convention for easier management and identification.
+We employ a modular approach for maintainability, where each module includes:
+1. **inputs.tf**: Defines the required inputs for the module.
+2. **main.tf**: Contains the resource definitions.
+3. **outputs.tf**: Provides the outputs needed by other modules.
 
-    Modular approach: We created several terraform modules to ensure clean & maintainable code. 
-
-    Each module consists of three files:
-    1. *inputs.tf* - contains all variables neccesary for the module
-    2. *main.tf* - contains all resource deployments
-    3. *outputs.tf* contains all variables, which we need in other modules
-    
-    The structure is as follows
+**Directory Structure:**
+```
+- main.tf
+- terraform.tfvars (local development file, ignored in version control)
+- modules/
+  - module_1/
+  - module_2/
+  - module_x/
+    - inputs.tf
     - main.tf
-    - terraform.tfvars (only used for local development, can be created manually. Is handled by gitignore to not be checked in, as it contains secrets)
-    modules
-        module_1
-        module_,,
-        module_x
-            inputs.tf
-            main.tf
-            outputs.tf
+    - outputs.tf
+```
 
-## Resource Definitions
+## Resource Overview
 
-    VM-Clients
-    - VMs running with windows server, datacenter editio 2022. 
-    - VMs can be replicated however often is required
-    - Extensions are used, to ensure the mounting process & dependency management is run for each deployment
-    - Accesable with RDP
+### Virtual Machines
+- **OS**: Windows 11
+- **Replicability**: VM scaling as needed. Terraform can setup x VMs by just creating a new module call.
+- **Scripts & Dependencies**: VMs use extensions to automate the mounting of the Azure file share and manage software dependencies. Accessible via RDP.
 
-    Storageaccount:
-    - Standard storage account
-    - Has a file share, which we later mount to the VMs
-    - Private link to ensure security
+### Storage Account
+- Standard storage account with an Azure file share.
+- Secured using a private link.
 
-    Keyvault: 
-    -  Contains any secrets that we need along the way
+### Key Vault
+- Stores secrets and sensitive information for the project.
 
-    VNET:
-    - We have two VNETs, one for each region. 
-    - VNETs are peered with each other
-    - We manage the firewall using SecurityGroups on the VNET level.
+### Virtual Networks (VNets)
+- Two VNets, one per region (EU and US).
+- VNets are peered, with security managed at the VNet level using Network Security Groups (NSGs).
 
-## VM Bootstrapping with PowerShell
+## PowerShell VM Bootstrapping
 
-*Script Overview*
+### Script Functions
 
-We are using two scripts.
-1. Create service
-    Is run through terraform. Each change on its corresponding script file will update on the virtual machine. It sets up the virtual machine to setup further scripts. 
-    In our case it sets up our bootstrapping script by setting environment variables and creating an autostart link for the script.
+Two scripts are involved:
+1. **Service Creation Script**: Executed through Terraform, this script initializes the VM to set up the environment, including autostart for further scripts.
+2. **Bootstrapping Script**: Uploaded via CustomScriptExtension and executed on startup, this script installs .NET SDK, configures the environment, and mounts the file share.
 
-2. Bootstrapping
-    It is uploaded to the vm using the CustomScriptExtension and run on autostart. The script sets up a dotnet environment and mounts the fileshare.
+### Logging
+- Both scripts log activities under `C:\CustomScriptLogs` for detailed process tracking and debugging.
 
+## Networking Design
 
-Logging
-    Both scripts have seperate LogFiles under C:\CustomScriptLogs. We log all processes in detail to allow debugging.
-    
+### VNet Peering
 
-## Networking and Connectivity
+The solution creates two VNets (EU and US), peered to facilitate secure, internal communication across regions:
+- **VNet A (EU)**: Hosts the primary storage account with the Azure file share.
+- **VNet B (US)**: Contains VMs that access the file share through private endpoints.
 
-VNet Peering
+### Private Link for Secure Access
 
-The project provisions two Virtual Networks (VNets), one in the EU region and one in the US region. These VNets are peered to enable secure communication between resources in both regions without relying on the public internet.
+Private Link secures access to the storage account, ensuring the file share is only reachable through the internal network:
+- **Private Endpoints**: Enable VMs in VNet B to securely access the file share in VNet A.
 
-    VNet A (EU): Contains the primary storage account with the Azure file share.
-    VNet B (US): Hosts virtual machines that connect to the file share in VNet A via private endpoints.
+### DNS Configuration
 
-Private Link for Storage Account
+For Private Link to function properly, DNS must be configured to resolve private endpoints:
+- **Private DNS Zone**: Ensures that both VNets can resolve the storage account's private domain.
 
-A key aspect of this project's security and network design is the use of Azure Private Link to securely connect resources to the storage account without exposing it to the public internet.
+### File Share Connectivity
 
-    Private Endpoints: The storage account in VNet A is accessible to VMs in VNet B via Private Link, which creates private endpoints. This ensures that the file share is accessible through internal networks only.
+The bootstrapping script configures VMs in VNet B to mount the file share securely using Private Link, ensuring that credentials persist across reboots.
 
-DNS Configuration
+## Common Issues & Resolutions
 
-For Private Link to work seamlessly, proper DNS configuration is necessary to resolve the storage account's private endpoint domain name within the VNets.
-
-    Private DNS Zone: A private DNS zone is associated with both VNets to resolve the private domain name of the storage account. The VMs in both VNets use this private DNS zone to reach the storage account via its private endpoint.
-
-VM File Share Connectivity
-
-    The PowerShell script sets up the VMs in VNet B to mount the file share located in VNet A using the Private Link configuration.
-    The script ensures that the credentials for accessing the storage account are stored securely and persist across reboots.
-
-## Troubleshooting
-
-Log Files:
-
-    Bootstrapping log: Captures details about the .NET SDK installation process and other bootstrapping activities.
-    File share log: Logs actions related to mounting the Azure file share and setting up credentials.
-
-Issues we encountered during development:
-
-    - Failed to Set Credentials: Check the file share log if there are issues with credential management.
-    - File Share Not Mounted: Ensure that the private link and network configurations are correct if the file share cannot be mounted.
-    - .NET SDK Not Installed: Review the bootstrapping log for any download or installation failures during the .NET SDK setup.
-    - CustomScriptExtension runs under a different user than when logged in. Some commands say that they have successfully executed, but they cause negative side effects. Setting credentials with cmdkey for example, never works because the corresponding registry entries are not created. The same goes for mounitng the network drive.  
-Windows Machine:
-
-    - There is a windows bug, where a programatically created fileshare will show as disconnected, but it still works. All features are unaffected, except that you cannot disconnect it. This needs to be looked at.
-    - Creating a service needs to be done under specific user contexts. The CustomScriptExtensions Context has privledges, but seems to be behaving weirdly. Running a script directly from the machine gives different results.
-
+### VM and Script Issues
+- **Credential Setting Failure**: Review the file share log if credential management fails.
+- **File Share Mounting Failure**: Ensure that Private Link and DNS settings are correct.
+- **.NET SDK Installation Issues**: Check the bootstrapping log for download or installation errors.
+- **CustomScriptExtension Challenges**: Some tasks (e.g., `cmdkey` credential management) fail when executed under the CustomScriptExtension context but work under direct execution. Consider using Windows services for more reliable script execution.
+- **Provisioning Failures**: When CustomScriptExtensions fail initially, Terraform can lose track of their state. Manual intervention may be required.
+- **Windows File Share Bug**: Occasionally, programmatically created file shares show as "disconnected," but remain functional. This is a known issue requiring further investigation.
+- **Environment variables Bug**: When setting environment variables with cmdlets like setx or SetEnvironmentVariable, the variable isn't set. We got it to work only by using direct registry entries. 
+### Terraform & Azure Limitations
+- **Storage Account Tier Restrictions**: Private Link cannot be used with premium storage accounts (SSDs), limiting performance choices.
+- **Cross-Region ServiceConnections**: These are restricted to the same region, making cross-region deployments challenging when using ServiceConnections.
 
 ## Ansible playbook configuration
 

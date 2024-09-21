@@ -76,10 +76,9 @@ module "vm_client1" {
   location                = data.azurerm_resource_group.rg_us.location
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   client_number           = 1
-  vnet_name               = module.virtual_network_us.vnet_name
-  subnet_name             = module.virtual_network_us.subnet_name
+  subnet_id               = module.virtual_network_us.subnet_id
 
-  key_vault_name = module.key_vault.name
+  key_vault_id = module.key_vault.id
 
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
@@ -90,7 +89,8 @@ module "vm_client1" {
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
-  script_file_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
+  bootstrapping_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
+  create_service_md5 = azurerm_storage_blob.create_service_script.content_md5
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
@@ -110,9 +110,9 @@ module "vm_client2" {
   location                = data.azurerm_resource_group.rg_us.location
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   client_number           = 2
-  vnet_name               = module.virtual_network_us.vnet_name
-  subnet_name             = module.virtual_network_us.subnet_name
-  key_vault_name          = module.key_vault.name
+  subnet_id               = module.virtual_network_us.subnet_id
+
+  key_vault_id = module.key_vault.id
 
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
@@ -123,7 +123,8 @@ module "vm_client2" {
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
-  script_file_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
+  bootstrapping_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
+  create_service_md5 = azurerm_storage_blob.create_service_script.content_md5
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
