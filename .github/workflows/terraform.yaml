@@ -23,7 +23,8 @@ jobs:
         with:
           terraform_wrapper: false
       - name: show ARM_CLIENT_ID
-        run: echo "ARM_CLIENT_ID: ${{ env.ARM_CLIENT_ID }}"
+        run: |
+          echo "ARM_CLIENT_ID: $ARM_CLIENT_ID"
       - name: terraform init
         working-directory: infrastructure
         run: |
