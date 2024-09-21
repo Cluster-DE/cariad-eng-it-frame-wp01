@@ -2,7 +2,7 @@
 
 ## Introduction
 
-    This project automates the provisioning of infrastructure using Terraform and bootstraps virtual machines (VMs) using a PowerShell script. The bootstrapping includes a process, which mounts a fileshare onto the virtual machine. The infrastructure includes resources across two regions: the EU and the US. The VMs are configured to access an Azure file share using private links and have the necessary software dependencies installed (e.g., .NET SDK).
+This project automates the provisioning of infrastructure using Terraform and bootstraps virtual machines (VMs) using a PowerShell script. The bootstrapping includes a process, which mounts a fileshare onto the virtual machine. The infrastructure includes resources across two regions: the EU and the US. The VMs are configured to access an Azure file share using private links and have the necessary software dependencies installed (e.g., .NET SDK).
 
 ## Prerequisites
 
@@ -154,7 +154,7 @@ Windows Machine:
 
 ## Ansible playbook configuration
 
-Due to the short notice of the request, we were unable to implement Ansible playbooks as initially planned. The limited time available did not allow for the development, testing, and fine-tuning of Ansible configurations. Instead, we opted for Terraform, which allowed us to quickly provision and configure the required infrastructure in a more time-efficient manner, leveraging its declarative approach and our team's familiarity with the tool. This ensured that we met the deadline while maintaining the desired configuration outcomes.
+The limited time available did not allow for the development, testing, and fine-tuning of Ansible configurations. Instead, we opted for Terraform, which allowed us to quickly provision and configure the required infrastructure in a more time-efficient manner, leveraging its declarative approach and our team's familiarity with the tool. This ensured that we met the deadline while maintaining the desired configuration outcomes.
 
 ## Performance measurement report
 
