@@ -1,5 +1,3 @@
-
-
 data "azurerm_client_config" "current" {}
 
 locals {
@@ -26,12 +24,12 @@ resource "azurerm_key_vault" "kv" {
 resource "azurerm_role_assignment" "key_vault_admin" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Administrator"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = var.principal_id
 }
 
 # Assign Key Vault Secrets User role to the current user/service principal
 resource "azurerm_role_assignment" "key_vault_secrets_user" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = var.principal_id
 }

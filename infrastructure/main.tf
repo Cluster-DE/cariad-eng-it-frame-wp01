@@ -17,18 +17,16 @@ module "common_naming" {
 
 data "azurerm_resource_group" "rg_eu" {
   name     = "rg-${var.project_name}-${var.environment}-euw"
-  location = "West Europe"
 }
 
 data "azurerm_resource_group" "rg_us" {
   name     = "rg-${var.project_name}-${var.environment}-usw"
-  location = "West US"
 }
 
 module "virtual_network_eu" {
   source                  = "./modules/virtual_network"
-  resource_group_name     = azurerm_resource_group.rg_eu.name
-  location                = azurerm_resource_group.rg_eu.location
+  resource_group_name     = data.azurerm_resource_group.rg_eu.name
+  location                = data.azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
   address_space           = ["10.1.0.0/16"]
   subnet_name             = "subnet"
@@ -37,8 +35,8 @@ module "virtual_network_eu" {
 
 module "virtual_network_us" {
   source                  = "./modules/virtual_network"
-  resource_group_name     = azurerm_resource_group.rg_us.name
-  location                = azurerm_resource_group.rg_us.location
+  resource_group_name     = data.azurerm_resource_group.rg_us.name
+  location                = data.azurerm_resource_group.rg_us.location
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   address_space           = ["10.2.0.0/16"]
   subnet_name             = "subnet"
@@ -47,7 +45,7 @@ module "virtual_network_us" {
 
 resource "azurerm_virtual_network_peering" "eu-to-us" {
   name                      = "peer-${var.project_name}-${var.environment}-euw"
-  resource_group_name       = azurerm_resource_group.rg_eu.name
+  resource_group_name       = data.azurerm_resource_group.rg_eu.name
   virtual_network_name      = module.virtual_network_eu.vnet_name
   remote_virtual_network_id = module.virtual_network_us.id
   allow_forwarded_traffic = true
@@ -56,7 +54,7 @@ resource "azurerm_virtual_network_peering" "eu-to-us" {
 
 resource "azurerm_virtual_network_peering" "us-to-eu" {
   name                      = "peer-${var.project_name}-${var.environment}-usw"
-  resource_group_name       = azurerm_resource_group.rg_us.name
+  resource_group_name       = data.azurerm_resource_group.rg_us.name
   virtual_network_name      = module.virtual_network_us.vnet_name
   remote_virtual_network_id = module.virtual_network_eu.id
   allow_forwarded_traffic = true
@@ -65,16 +63,17 @@ resource "azurerm_virtual_network_peering" "us-to-eu" {
 
 module "key_vault" {
   source                  = "./modules/key_vault"
-  resource_group_name     = azurerm_resource_group.rg_eu.name
-  location                = azurerm_resource_group.rg_eu.location
+  resource_group_name     = data.azurerm_resource_group.rg_eu.name
+  location                = data.azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
+  principal_id            = var.principal_id
 }
 
 module "vm_client1" {
   source                  = "./modules/vm_client"
-  resource_group_name_eu  = azurerm_resource_group.rg_eu.name
-  resource_group_name_us  = azurerm_resource_group.rg_us.name
-  location                = azurerm_resource_group.rg_us.location
+  resource_group_name_eu  = data.azurerm_resource_group.rg_eu.name
+  resource_group_name_us  = data.azurerm_resource_group.rg_us.name
+  location                = data.azurerm_resource_group.rg_us.location
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   client_number           = 1
   vnet_name               = module.virtual_network_us.vnet_name
@@ -106,9 +105,9 @@ module "vm_client1" {
 
 module "vm_client2" {
   source                  = "./modules/vm_client"
-  resource_group_name_eu  = azurerm_resource_group.rg_eu.name
-  resource_group_name_us  = azurerm_resource_group.rg_us.name
-  location                = azurerm_resource_group.rg_us.location
+  resource_group_name_eu  = data.azurerm_resource_group.rg_eu.name
+  resource_group_name_us  = data.azurerm_resource_group.rg_us.name
+  location                = data.azurerm_resource_group.rg_us.location
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   client_number           = 2
   vnet_name               = module.virtual_network_us.vnet_name
@@ -139,8 +138,8 @@ module "vm_client2" {
 
 module "storage_account" {
   source                  = "./modules/storage_account"
-  resource_group_name     = azurerm_resource_group.rg_eu.name
-  location                = azurerm_resource_group.rg_eu.location
+  resource_group_name     = data.azurerm_resource_group.rg_eu.name
+  location                = data.azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
 
   eu_subnet_id           = module.virtual_network_eu.subnet_id
@@ -171,7 +170,7 @@ resource "azurerm_storage_blob" "create_service_script" {
 
 # module "private_dns" {
 #   source              = "./modules/private_dns"
-#   resource_group_name = azurerm_resource_group.rg_eu.name
+#   resource_group_name = data.azurerm_resource_group.rg_eu.name
 #   resource_name_specifier = module.common_naming.resource_name_specifier_eu
 #   us_subnet_id           = module.virtual_network_us.subnet_id
 #   eu_subnet_id           = module.virtual_network_eu.subnet_id

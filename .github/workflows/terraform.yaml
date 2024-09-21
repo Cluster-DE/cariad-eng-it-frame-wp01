@@ -7,6 +7,7 @@ on:
 env:
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET}}
   ARM_CLIENT_ID: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID}}
+  #ARM_CLIENT_OBJECT_ID: ${{ secrets.AZURE_SERVICE_PRINCIPAL_OBJECT_ID}} Once this is aviailable in the secrets, add as -var parameter in terraform plan and apply
   ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID}}
   ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID}}
 
@@ -22,9 +23,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
-      - name: show ARM_CLIENT_ID
-        run: |
-          echo "ARM_CLIENT_ID: $ARM_CLIENT_ID"
       - name: terraform init
         working-directory: infrastructure
         run: |

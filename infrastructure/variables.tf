@@ -27,3 +27,8 @@ variable "subscription_id" {
   type        = string
   description = "Subscription ID"
 }
+
+variable "principal_id" {
+  type        = string
+  description = "Principal ID"
+}
