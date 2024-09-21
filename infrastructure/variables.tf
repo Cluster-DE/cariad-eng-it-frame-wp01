@@ -28,7 +28,7 @@ variable "subscription_id" {
   description = "Subscription ID"
 }
 
-variable "principal_id" {
-  type        = string
-  description = "Principal ID"
+variable "principal_ids" {
+  type        = list(string)
+  description = "Principal IDs that are able to administer the resources"
 }

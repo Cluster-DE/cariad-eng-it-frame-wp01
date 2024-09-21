@@ -66,7 +66,7 @@ module "key_vault" {
   resource_group_name     = data.azurerm_resource_group.rg_eu.name
   location                = data.azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
-  principal_id            = var.principal_id
+  principal_ids            = var.principal_ids
 }
 
 module "vm_client1" {

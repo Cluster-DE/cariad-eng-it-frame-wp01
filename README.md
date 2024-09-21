@@ -78,34 +78,18 @@ Purpose
 
 *Script Overview*
 
-The PowerShell script is executed on virtual machines to handle:
+We are using two scripts.
+1. Create service
+    Is run through terraform. Each change on its corresponding script file will update on the virtual machine. It sets up the virtual machine to setup further scripts. 
+    In our case it sets up our bootstrapping script by setting environment variables and creating an autostart link for the script.
 
-    Logging key actions for auditing and debugging purposes.
-    Setting up the credentials to access an Azure file share.
-    Installing the .NET 8 SDK, if not already present.
+2. Bootstrapping
+    It is uploaded to the vm using the CustomScriptExtension and run on autostart. The script sets up a dotnet environment and mounts the fileshare.
 
-Parameters
-
-The script accepts several input parameters for customization:
-
-    $storageAccountName: The name of the Azure Storage account.
-    $storageAccountKey: The key to access the storage account.
-    $storagePrivateDomain: The private domain for the storage account (used for private endpoints).
-    $fileshareName: The name of the file share in the storage account.
-    $storageAccountConnectionString: The connection string for the storage account.
 
 Logging
-
-    Log File Paths:
-        Bootstrapping log: C:\CustomScriptExtensionLogs\bootstrapping.log
-        File share log: C:\CustomScriptExtensionLogs\fileshare.log
-    Write-Log Function: The script includes a custom logging function to write timestamped log entries to the appropriate log files.
-
-Credential and File Share Setup
-
-    Set Connection String: The script sets the STORAGE_ACCOUNT_CONNECTION_STRING environment variable using the connection string parameter. This connection string is used by our benchmarking tool.
-    Add Credentials: It stores the credentials using cmdkey so that they persist across reboots.
-    Mount File Share: The script checks whether the Azure file share is already mounted. If not, it mounts the file share using the provided credentials.
+    Both scripts have seperate LogFiles under C:\CustomScriptLogs. We log all processes in detail to allow debugging.
+    
 
 ## Networking and Connectivity
 
