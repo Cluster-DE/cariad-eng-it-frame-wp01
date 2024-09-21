@@ -98,7 +98,9 @@ module "vm_client1" {
     azurerm_virtual_network_peering.us-to-eu,
     module.virtual_network_eu,
     module.virtual_network_us,
-    module.key_vault
+    module.key_vault,
+    azurerm_storage_blob.bootstrapping_script,
+    azurerm_storage_blob.create_service_script
   ]
 }
 
@@ -129,7 +131,9 @@ module "vm_client2" {
     azurerm_virtual_network_peering.us-to-eu,
     module.virtual_network_eu,
     module.virtual_network_us,
-    module.key_vault
+    module.key_vault,
+    azurerm_storage_blob.bootstrapping_script,
+    azurerm_storage_blob.create_service_script
   ]
 }
 

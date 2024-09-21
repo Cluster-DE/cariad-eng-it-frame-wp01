@@ -102,19 +102,31 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"
 
-settings = <<SETTINGS
-  {
-    "fileUris": [
-      "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.bootstrapping_script_name}",
-      "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.create_service_script_name}"
-    ]
+  settings = <<SETTINGS
+    {
+      "fileUris": [
+        "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.bootstrapping_script_name}",
+        "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.create_service_script_name}"
+      ]
+    }
+  SETTINGS
+
+
+  protected_settings = jsonencode({
+    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -storagePrivateDomain \"${var.storage_private_domain}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -ServiceName \"RunSetupScriptService\" -ServiceDescription \"Run  create_service.ps1 at startup. Filehash: ${var.script_file_md5}\" -Username \"adminuser\" -Password \"${azurerm_key_vault_secret.admin_password_secret.value}\""
+  })
+
+  depends_on = [
+    null_resource.file_change
+  ]
+
+}
+
+resource "null_resource" "file_change" {
+
+  triggers = {
+    script_file_md5 = var.script_file_md5
   }
-SETTINGS
-
-
-protected_settings = jsonencode({
-  commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -storagePrivateDomain \"${var.storage_private_domain}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -ServiceName \"RunSetupScriptService\" -ServiceDescription \"Run create_service.ps1 at startup. Filehash: ${var.script_file_md5}\" -Username \"adminuser\" -Password \"${azurerm_key_vault_secret.admin_password_secret.value}\""
-})
 
 }
 

@@ -46,14 +46,12 @@ if (Test-Path -Path "$($mountDriveLetter):\") {
     # Mount the file share
     try {
 
-        # Convert the plain-text password into a SecureString
-        $securePassword = ConvertTo-SecureString $storageAccountKey -AsPlainText -Force
+        $fileshareLocation = "\\$storageAccountName.file.core.windows.net\$fileShareName"
 
-        # Create PSCredential object
-        $credential = New-Object System.Management.Automation.PSCredential ($storageAccountName, $securePassword)
+        # Using net use to mount the Azure file share
+        $netUseCommand = "net use $mountDriveLetter $fileshareLocation /user:`"localhost\$storageAccountName` $storageAccountKey" 
+        $output = cmd.exe /c $netUseCommand
 
-        # Mount the Azure File Share using New-PSDrive
-        $output = New-PSDrive -Name $mountDriveLetter -PSProvider FileSystem -Root "\\$storageAccountName.file.core.windows.net\$fileShareName" -Credential $credential -Persist 2>&1 | Out-String
         Write-Log "Attempted to mount the file share. Message: $output" $logFilePathFileshare
     } catch {
         Write-Log "Failed to mount the file share: $_" $logFilePathFileshare

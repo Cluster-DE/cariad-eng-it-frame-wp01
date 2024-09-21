@@ -12,6 +12,8 @@ param (
     [string]$storageAccountConnectionString
 )
 
+$ErrorActionPreference = "Stop"
+
 function Write-Log {
     param (
         [string]$message
@@ -20,7 +22,50 @@ function Write-Log {
     $logMessage = "$timestamp - $message"
     Add-Content -Path "C:\\CustomScriptExtensionLogs\\create_service.log" -Value $logMessage
 }
+# Function to check if PowerShell 7.4.5 is already installed
+function Check-PowerShellVersion {
+    try {
+        $installedVersion = & "pwsh" -Version 2>&1 | Out-String
+        if ($installedVersion -match "7.4.5") {
+            Write-Log "PowerShell 7.4.5 is already installed."
+            return $true
+        } else {
+            Write-Log "PowerShell 7.4.5 is not installed. Current version: $installedVersion"
+            return $false
+        }
+    } catch {
+        Write-Log "Error while checking PowerShell version: $_"
+        return $false
+    }
+}
 
+# Function to download and install PowerShell 7.4.5
+function Install-PowerShell {
+    $pwshDownloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.5/PowerShell-7.4.5-win-x64.msi"
+    $pwshInstallerPath = "C:\Temp\PowerShell-7.4.5-win-x64.msi"
+
+    Write-Log "Downloading PowerShell 7.4.5 from $pwshDownloadUrl"
+    Invoke-WebRequest -Uri $pwshDownloadUrl -OutFile $pwshInstallerPath
+
+    Write-Log "Installing PowerShell 7.4.5 silently."
+    Start-Process msiexec.exe -ArgumentList "/i $pwshInstallerPath /quiet /norestart" -Wait
+
+    Write-Log "PowerShell 7.4.5 installation complete. Cleaning up."
+    Remove-Item $pwshInstallerPath -Force
+
+    # Optionally, restart the system to apply changes (if required)
+    # Write-Log "Restarting system to apply changes."
+    # Restart-Computer -Force
+}
+
+
+# Main logic to check and install/update PowerShell
+if (-not (Check-PowerShellVersion)) {
+    Write-Log "Updating to PowerShell 7.4.5."
+    Install-PowerShell
+} else {
+    Write-Log "No update necessary, PowerShell 7.4.5 is already installed."
+}
 
 # Log file path
 $logFileStdout = "C:\\CustomScriptExtensionLogs\\service_output.log"
@@ -31,6 +76,9 @@ if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
     New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
 }
 
+
+
+
 # Until private link doesnt work, set it to the default value
 $storagePrivateDomain = "$storageAccountName.file.core.windows.net"
 
@@ -39,12 +87,16 @@ try {
 
     Write-Log "Setting environment variables for bootstrapping script."
 
+    # GET SID
+    $sid = (Get-WmiObject win32_useraccount -Filter "Name='$Username'").SID
+
     # Use Registry to directly set the environment variable for future processes
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "STORAGE_ACCOUNT_CONNECTION_STRING" -Value "$storageAccountConnectionString"
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "STORAGE_ACCOUNT_NAME" -Value "$storageAccountName"
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "STORAGE_ACCOUNT_KEY" -Value "$storageAccountKey"
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "STORAGE_PRIVATE_DOMAIN" -Value "$storagePrivateDomain"
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "FILE_SHARE_NAME" -Value "$fileshareName"
+    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_CONNECTION_STRING' -Value $storageAccountConnectionString -Type String
+    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_NAME' -Value $storageAccountName -Type String
+    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_KEY' -Value $storageAccountKey -Type String
+    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_PRIVATE_DOMAIN' -Value $storagePrivateDomain -Type String
+    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'FILE_SHARE_NAME' -Value $fileshareName -Type String
+
     
     Write-Log "Environment variable set successfully."
 
