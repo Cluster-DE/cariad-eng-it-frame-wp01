@@ -77,8 +77,6 @@ if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
 }
 
 
-
-
 # Until private link doesnt work, set it to the default value
 $storagePrivateDomain = "$storageAccountName.file.core.windows.net"
 
