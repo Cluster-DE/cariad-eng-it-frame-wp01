@@ -115,6 +115,8 @@ The bootstrapping script configures VMs in VNet B to mount the file share secure
 ### Terraform & Azure Limitations
 - **Storage Account Tier Restrictions**: Private Link cannot be used with premium storage accounts (SSDs), limiting performance choices.
 - **Cross-Region ServiceConnections**: These are restricted to the same region, making cross-region deployments challenging when using ServiceConnections.
+- **Storage account without public access disables GitHub Agents & local development**: When disabling public access, the azure resource manager behind terraform cannot access resources like blobs & fileshares. This issue can be solved by creating or connecting a ci/cd agent with our vnet. For local development we have the same case - we would need to use a VPN to allow that. 
+Alteratively, we can also allow the current ip address of the agent or the developer before deployment. 
 
 ## Ansible playbook configuration
 

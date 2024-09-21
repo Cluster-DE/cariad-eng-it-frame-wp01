@@ -67,6 +67,14 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 }
 
+resource "azurerm_private_dns_a_record" "vm_a_record" {
+   name                = local.vm_resource_name
+   zone_name           = var.dns_zone_name
+   resource_group_name = var.resource_group_name_eu
+   ttl                 = 300
+   records             = [azurerm_windows_virtual_machine.vm.private_ip_address]
+ }
+
 resource "random_password" "admin_password" {
   length  = 14
   special = false

@@ -109,4 +109,4 @@ try{
 }
 
 # This is a bit extreme, maybe could work on a better solution
-Restart-Computer -Force    
+# Restart-Computer -Force

@@ -8,7 +8,6 @@ variable "resource_group_name_us" {
   description = "Name of the resource group"
 }
 
-
 variable "location" {
   type        = string
   description = "Location of the resource group"
@@ -17,6 +16,11 @@ variable "location" {
 variable "resource_name_specifier" {
   type        = string
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
+}
+
+variable "dns_zone_name"{
+  type        = string
+  description = "Name of the DNS zone"
 }
 
 variable "client_number" {
