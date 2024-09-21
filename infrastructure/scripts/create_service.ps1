@@ -22,46 +22,6 @@ function Write-Log {
     $logMessage = "$timestamp - $message"
     Add-Content -Path "C:\\CustomScriptExtensionLogs\\create_service.log" -Value $logMessage
 }
-# Function to check if PowerShell 7.4.5 is already installed
-function Check-PowerShellVersion {
-    try {
-        $installedVersion = & "pwsh" -Version 2>&1 | Out-String
-        if ($installedVersion -match "7.4.5") {
-            Write-Log "PowerShell 7.4.5 is already installed."
-            return $true
-        } else {
-            Write-Log "PowerShell 7.4.5 is not installed. Current version: $installedVersion"
-            return $false
-        }
-    } catch {
-        Write-Log "Error while checking PowerShell version: $_"
-        return $false
-    }
-}
-
-# Function to download and install PowerShell 7.4.5
-function Install-PowerShell {
-    $pwshDownloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.5/PowerShell-7.4.5-win-x64.msi"
-    $pwshInstallerPath = "C:\Temp\PowerShell-7.4.5-win-x64.msi"
-
-    Write-Log "Downloading PowerShell 7.4.5 from $pwshDownloadUrl"
-    Invoke-WebRequest -Uri $pwshDownloadUrl -OutFile $pwshInstallerPath
-
-    Write-Log "Installing PowerShell 7.4.5 silently."
-    Start-Process msiexec.exe -ArgumentList "/i $pwshInstallerPath /quiet /norestart" -Wait
-
-    Write-Log "PowerShell 7.4.5 installation complete. Cleaning up."
-    Remove-Item $pwshInstallerPath -Force
-}
-
-
-# Main logic to check and install/update PowerShell
-if (-not (Check-PowerShellVersion)) {
-    Write-Log "Updating to PowerShell 7.4.5."
-    Install-PowerShell
-} else {
-    Write-Log "No update necessary, PowerShell 7.4.5 is already installed."
-}
 
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
