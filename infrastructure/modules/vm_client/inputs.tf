@@ -63,3 +63,23 @@ variable "storage_private_domain" {
   type        = string
   description = "Private domain of the storage account"
 }
+
+variable "bootstrapping_script_name"{
+  type        = string
+  description = "Name of the bootstrapping script"
+}
+
+variable "create_service_script_name"{
+  type        = string
+  description = "Name of the script to create the service"
+}
+
+variable "scripts_container_name"{
+  type        = string
+  description = "Name of the container for the scripts"
+}
+
+variable "script_file_md5"{
+  type        = string
+  description = "MD5 hash of the script file"
+}

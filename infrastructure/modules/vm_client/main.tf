@@ -60,7 +60,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   name                = local.vm_resource_name
   resource_group_name = var.resource_group_name_us
   location            = var.location
-  size                = "Standard_D2_v3" #optimized for storage
+  size                = "Standard_D2_v4" #optimized for storage
   admin_username      = "adminuser"
   admin_password      = azurerm_key_vault_secret.admin_password_secret.value
   network_interface_ids = [
@@ -73,19 +73,16 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 
   source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-Datacenter"
+    publisher = "MicrosoftWindowsDesktop"
+    offer     = "windows-11"
+    sku       = "win11-21h2-avd"
     version   = "latest"
   }
-
-  #patch_mode  = "AutomaticByPlatform"
-
 }
 
 resource "random_password" "admin_password" {
-  length  = 16
-  special = true
+  length  = 14
+  special = false
   upper   = true
   lower   = true
   numeric = true
@@ -97,45 +94,58 @@ resource "azurerm_key_vault_secret" "admin_password_secret" {
   key_vault_id = data.azurerm_key_vault.kv.id
 }
 
-# Mount fileshare script to mount Azure File Share to Windows VM
-resource "azurerm_virtual_machine_extension" "mount_fileshare" {
-  name                 = local.fileshare_ext_resource_name
+# This creates the Custom Script Extension to copy the script to the VM
+resource "azurerm_virtual_machine_extension" "custom_script" {
+  name                 = "customScript"
   virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
-  type_handler_version = "1.9"
+  type_handler_version = "1.10"
 
-  protected_settings = jsonencode({
-    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1 -storageAccountName '${data.template_file.bootstrapping.vars.storageAccountName}' -storageAccountKey '${data.template_file.bootstrapping.vars.storageAccountKey}' -fileshareName '${data.template_file.bootstrapping.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.bootstrapping.vars.storageAccountConnectionString}' -storagePrivateDomain '${data.template_file.bootstrapping.vars.storagePrivateDomain}'"
-  })
-
-}
-
-data "template_file" "bootstrapping" {
-  template = file("${path.module}/../../scripts/bootstrapping.ps1")
-  vars = {
-    storageAccountName             = var.storage_account_name
-    storageAccountKey              = var.storage_account_key
-    fileshareName                  = var.fileshare_name
-    storageAccountConnectionString = var.storage_account_connection_string
-    storagePrivateDomain           = var.storage_private_domain
+settings = <<SETTINGS
+  {
+    "fileUris": [
+      "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.bootstrapping_script_name}",
+      "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.create_service_script_name}"
+    ]
   }
+SETTINGS
+
+
+protected_settings = jsonencode({
+  commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -storagePrivateDomain \"${var.storage_private_domain}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -ServiceName \"RunSetupScriptService\" -ServiceDescription \"Run create_service.ps1 at startup. Filehash: ${var.script_file_md5}\" -Username \"adminuser\" -Password \"${azurerm_key_vault_secret.admin_password_secret.value}\""
+})
+
 }
 
-# # Bootstrapping script to install dependencies
-# data "template_file" "bootstrapping_script" {
-#     template = "${file("${path.module}/../../scripts/bootstrapping.ps1")}"
-# }
+ # Bootstrapping script to install dependencies
+#  data "template_file" "create_service" {
+#      template = "${file("${path.module}/../../scripts/create-service.ps1")}"
+#  }
 
-# resource "azurerm_virtual_machine_extension" "bootstrapping" {
-#   name                 = local.bootstrapping_ext_resource_name
+ 
+# Mount fileshare script to mount Azure File Share to Windows VM
+# resource "azurerm_virtual_machine_extension" "mount_fileshare" {
+#   name                 = local.fileshare_ext_resource_name
 #   virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
 #   publisher            = "Microsoft.Compute"
 #   type                 = "CustomScriptExtension"
-#   type_handler_version = "1.9"
+#   type_handler_version = "1.10"
 
 #   protected_settings = jsonencode({
-#   commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping_script.rendered)}')) | Out-File -filepath bootstrapping.ps1\"; powershell -ExecutionPolicy Unrestricted -File bootstrapping.ps1"
+#     commandToExecute = "powershell -ExecutionPolicy Unrestricted -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping.rendered)}')) | Out-File -filepath create-service.ps1\"; powershell -ExecutionPolicy Unrestricted -File create-service.ps1 -storageAccountName '${data.template_file.bootstrapping.vars.storageAccountName}' -storageAccountKey '${data.template_file.bootstrapping.vars.storageAccountKey}' -fileshareName '${data.template_file.bootstrapping.vars.fileshareName}' -storageAccountConnectionString '${data.template_file.bootstrapping.vars.storageAccountConnectionString}' -storagePrivateDomain '${data.template_file.bootstrapping.vars.storagePrivateDomain}'"
 #   })
 
 # }
+
+#  resource "azurerm_virtual_machine_extension" "bootstrapping" {
+#    name                 = local.bootstrapping_ext_resource_name
+#    virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
+#    publisher            = "Microsoft.Compute"
+#    type                 = "CustomScriptExtension"
+#    type_handler_version = "1.9"
+#    protected_settings = jsonencode({
+#    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.bootstrapping_script.rendered)}')) | Out-File -filepath create-service.ps1\"; powershell -ExecutionPolicy Unrestricted -File create-service.ps1"
+#    })
+
+#  }

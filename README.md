@@ -140,11 +140,17 @@ Log Files:
     Bootstrapping log: Captures details about the .NET SDK installation process and other bootstrapping activities.
     File share log: Logs actions related to mounting the Azure file share and setting up credentials.
 
-Common Issues:
+Issues we encountered during development:
 
-    Failed to Set Credentials: Check the file share log if there are issues with credential management.
-    File Share Not Mounted: Ensure that the private link and network configurations are correct if the file share cannot be mounted.
-    .NET SDK Not Installed: Review the bootstrapping log for any download or installation failures during the .NET SDK setup.
+    - Failed to Set Credentials: Check the file share log if there are issues with credential management.
+    - File Share Not Mounted: Ensure that the private link and network configurations are correct if the file share cannot be mounted.
+    - .NET SDK Not Installed: Review the bootstrapping log for any download or installation failures during the .NET SDK setup.
+    - CustomScriptExtension runs under a different user than when logged in. Some commands say that they have successfully executed, but they cause negative side effects. Setting credentials with cmdkey for example, never works because the corresponding registry entries are not created. The same goes for mounitng the network drive.  
+Windows Machine:
+
+    - There is a windows bug, where a programatically created fileshare will show as disconnected, but it still works. All features are unaffected, except that you cannot disconnect it. This needs to be looked at.
+    - Creating a service needs to be done under specific user contexts. The CustomScriptExtensions Context has privledges, but seems to be behaving weirdly. Running a script directly from the machine gives different results.
+
 
 ## Ansible playbook configuration
 

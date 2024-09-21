@@ -6,10 +6,6 @@ param (
     [string]$storageAccountConnectionString
 )
 
-# Log file path
-$logFilePathBootstrapping = "C:\CustomScriptExtensionLogs\bootstrapping.log"
-$logFilePathFileshare = "C:\CustomScriptExtensionLogs\fileshare.log"
-
 # Function to write log
 function Write-Log {
     param (
@@ -21,57 +17,59 @@ function Write-Log {
     Add-Content -Path $logFilePath -Value $logMessage
 }
 
+# Fetch values from environment variables if not provided as parameters
+$storageAccountName = $storageAccountName -or (Get-Item -Path Env:STORAGE_ACCOUNT_NAME).Value
+$storageAccountKey = $storageAccountKey -or (Get-Item -Path Env:STORAGE_ACCOUNT_KEY).Value
+$storagePrivateDomain = $storagePrivateDomain -or (Get-Item -Path Env:STORAGE_PRIVATE_DOMAIN).Value
+$fileshareName = $fileshareName -or (Get-Item -Path Env:FILESHARE_NAME).Value
+$storageAccountConnectionString = $storageAccountConnectionString -or (Get-Item -Path Env:STORAGE_ACCOUNT_CONNECTION_STRING).Value
+
+
+# Log file path
+$logFilePathBootstrapping = "C:\\CustomScriptExtensionLogs\\bootstrapping.log"
+$logFilePathFileshare = "C:\\CustomScriptExtensionLogs\\fileshare.log"
+$mountDriveLetter = "Y"
+
 # Create log directory if it doesn't exist
-if (-not (Test-Path -Path "C:\CustomScriptExtensionLogs")) {
-    New-Item -Path "C:\CustomScriptExtensionLogs" -ItemType Directory
+if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
+    New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
 }
 
 # Start logging
-Write-Log "Script execution started." $logFilePathFileshare
+Write-Log "Script execution started." $logFilePathBootstrapping
 
-# Set the storage account connection string as an environment variable
-try {
-    setx STORAGE_ACCOUNT_CONNECTION_STRING $storageAccountConnectionString
-    Write-Log "Environment variable STORAGE_ACCOUNT_CONNECTION_STRING set successfully." $logFilePathFileshare
-} catch {
-    Write-Log "Failed to set environment variable: $_" $logFilePathFileshare
-    exit 1
-}
-
-# Create the credential object
-try {
-    # Save the password so the drive will persist on reboot
-    cmd.exe /C "cmdkey /add:`"$storagePrivateDomain`" /user:`"localhost\$storageAccountName`" /pass:`"$storageAccountKey`""
-    Write-Log "Credentials added." $logFilePathFileshare
-} catch {
-    Write-Log "Failed to create credential object: $_" $logFilePathFileshare
-    exit 1
-}
 
 # Check if the file share is already mounted
-if (Test-Path -Path "Y:\") {
+if (Test-Path -Path "$($mountDriveLetter):\") {
     Write-Log "File share already exists. Continuing with the script." $logFilePathFileshare
 } else {
     # Mount the file share
     try {
-        # Mount the drive using net use without specifying user and password
-        cmd.exe /C "net use Y: \\$storagePrivateDomain\$fileshareName /persistent:yes"
-        Write-Log "Attempted to mount the file share." $logFilePathFileshare
+
+        # Convert the plain-text password into a SecureString
+        $securePassword = ConvertTo-SecureString $storageAccountKey -AsPlainText -Force
+
+        # Create PSCredential object
+        $credential = New-Object System.Management.Automation.PSCredential ($storageAccountName, $securePassword)
+
+        # Mount the Azure File Share using New-PSDrive
+        $output = New-PSDrive -Name $mountDriveLetter -PSProvider FileSystem -Root "\\$storageAccountName.file.core.windows.net\$fileShareName" -Credential $credential -Persist 2>&1 | Out-String
+        Write-Log "Attempted to mount the file share. Message: $output" $logFilePathFileshare
     } catch {
         Write-Log "Failed to mount the file share: $_" $logFilePathFileshare
         exit 1
     }
 
     # Verify the mount
-    if (Test-Path -Path "Y:\") {
-        Write-Log "File share mounted successfully at Y:\" $logFilePathFileshare
+    if (Test-Path -Path "$($mountDriveLetter):\") {
+        Write-Log "File share mounted successfully at $($mountDriveLetter):\" $logFilePathFileshare
     } else {
         Write-Log "Failed to mount the file share." $logFilePathFileshare
         exit 1
     }
 }
 
-### Bootstrapping
+### Install dotnet
 
 # Define the URL for the .NET 8 SDK installer
 $dotnetInstallerUrl = "https://download.visualstudio.microsoft.com/download/pr/f5f1c28d-7bc9-431e-98da-3e2c1bbd1228/864e152e374b5c9ca6d58ee953c5a6ed/dotnet-sdk-8.0.401-win-x64.exe"

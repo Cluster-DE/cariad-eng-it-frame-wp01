@@ -85,14 +85,20 @@ module "vm_client1" {
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
-  storage_private_domain            = module.storage_account.private_domain
+  storage_private_domain            = "REDACTED"
   fileshare_name                    = module.storage_account.fileshare_name
+  scripts_container_name            = module.storage_account.scripts_container_name
+
+  bootstrapping_script_name = "bootstrapping.ps1"
+  create_service_script_name = "create_service.ps1"
+  script_file_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
     azurerm_virtual_network_peering.us-to-eu,
     module.virtual_network_eu,
-    module.virtual_network_us
+    module.virtual_network_us,
+    module.key_vault
   ]
 }
 
@@ -110,15 +116,20 @@ module "vm_client2" {
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
-  storage_private_domain            = module.storage_account.private_domain
+  storage_private_domain            = "REDACTED"
   fileshare_name                    = module.storage_account.fileshare_name
+  scripts_container_name            = module.storage_account.scripts_container_name
 
+  bootstrapping_script_name = "bootstrapping.ps1"
+  create_service_script_name = "create_service.ps1"
+  script_file_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
     azurerm_virtual_network_peering.us-to-eu,
     module.virtual_network_eu,
-    module.virtual_network_us
+    module.virtual_network_us,
+    module.key_vault
   ]
 }
 
@@ -132,6 +143,27 @@ module "storage_account" {
   us_vnet_id          = module.virtual_network_us.id
   eu_vnet_id          = module.virtual_network_eu.id
 }
+
+# Upload scripts to blob storage
+
+resource "azurerm_storage_blob" "bootstrapping_script" {
+  name                   = "bootstrapping.ps1"
+  storage_account_name   =  module.storage_account.name
+  storage_container_name =  module.storage_account.scripts_container_name
+  type                   = "Block"
+  source                 =  "./scripts/bootstrapping.ps1"
+  content_md5            = filemd5("./scripts/bootstrapping.ps1")
+}
+
+resource "azurerm_storage_blob" "create_service_script" {
+  name                   = "create_service.ps1"
+  storage_account_name   =  module.storage_account.name
+  storage_container_name =  module.storage_account.scripts_container_name
+  type                   = "Block"
+  source                 =  "./scripts/create_service.ps1"
+  content_md5            = filemd5("./scripts/create_service.ps1")
+}
+
 
 # module "private_dns" {
 #   source              = "./modules/private_dns"
