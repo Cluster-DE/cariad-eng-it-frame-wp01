@@ -158,6 +158,7 @@ module "storage_account" {
   eu_vnet_id          = module.virtual_network_eu.id
 
   whitelisted_ips = var.whitelisted_ips
+  principal_ids = var.principal_ids
 }
 
 # Upload scripts to blob storage
