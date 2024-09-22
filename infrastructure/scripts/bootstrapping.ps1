@@ -18,22 +18,11 @@ function Write-Log {
     Add-Content -Path "C:\\CustomScriptExtensionLogs\\bootstrapping.log" -Value $logMessage
 }
 
-
-if ($env:STORAGE_ACCOUNT_NAME) {
-    $storageAccountName = $env:STORAGE_ACCOUNT_NAME
-}
-if ($env:STORAGE_ACCOUNT_KEY) {
-    $storageAccountKey = $env:STORAGE_ACCOUNT_KEY
-}
-if ($env:FILE_SHARE_NAME) {
-    $fileShareName = $env:FILE_SHARE_NAME
-}
-if ($env:STORAGE_ACCOUNT_CONNECTION_STRING) {
-    $storageAccountConnectionString = $env:STORAGE_ACCOUNT_CONNECTION_STRING
-}
-
 # Log file path
 $mountDriveLetter = "Y"
+
+# Wait for 5 minutes before starting the script
+Start-Sleep -Seconds 300
 
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
@@ -42,6 +31,15 @@ if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
 
 # Start logging
 Write-Log "Script execution started." "INFO"
+
+# Set environment variables
+try{
+    Write-Log "Setting environment variables for bootstrapping script." "INFO"
+    setx STORAGE_ACCOUNT_CONNECTION_STRING $storageAccountConnectionString
+}catch{
+    Write-Log "Failed to set environment variable: $_" "ERROR"
+    exit 1
+}
 
 
 # Check if the file share is already mounted
@@ -52,13 +50,15 @@ if (Test-Path -Path "$($mountDriveLetter):\") {
     $shareEndpoint = "\\$storageAccountName.file.core.windows.net\$fileShareName"
 
     try{
-        # Using net use to mount the Azure file share
-        $netUseCommand = "net use $($mountDriveLetter): $shareEndpoint /user:$user $storageAccountKey /persistent:yes"
-        Invoke-Expression $netUseCommand
+        cmd.exe /C "cmdkey /add:`"$storageAccountName.file.core.windows.net`" /user:`"$user`" /pass:`"$storageAccountKey`""
+
+        # Mount the drive
+        New-PSDrive -Name $($mountDriveLetter) -PSProvider FileSystem -Root "$shareEndpoint" -Persist
     }catch{
         Write-Log "Failed to mount the file share: $_" "ERROR"
         exit 1
     }
+
 
     # Verify the mount
     if (Test-Path -Path "$($mountDriveLetter):\") {
@@ -110,6 +110,7 @@ try {
     Write-Log "Failed to install .NET 8 SDK: $_" 
     exit 1
 }
+
 
 # Verify the installation
 try {

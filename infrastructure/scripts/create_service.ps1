@@ -2,6 +2,7 @@ param (
     [string]$DownloadedFile,          # Path to the downloaded setup script (setup_script.ps1)
     [string]$DestinationFolder = "C:\scripts",  # Directory to copy the file to (default C:\scripts)
     [string]$Username,                # Username to run the service
+    [string]$Password,                # Password for the user
     [string]$storageAccountName,
     [string]$storageAccountKey,
     [string]$fileshareName,
@@ -23,30 +24,6 @@ function Write-Log {
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
     New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
-}
-
-# Set environment variables
-try {
-    Write-Log "Setting environment variables for bootstrapping script." "INFO"
-
-    # GET SID. SID is available, but the processes creating REGISTRY entries are not created until the user logs in.
-    # Currently we have the requirement for the user to log in first, before this process works. 
-    # Due to time constraints, we were not able to fix this, but this would be solvable.
-    $sid = (Get-WmiObject win32_useraccount -Filter "Name='$Username'").SID
-
-
-
-    # Use Registry to directly set the environment variable for future processes
-    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_CONNECTION_STRING' -Value $storageAccountConnectionString -Type String
-    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_NAME' -Value $storageAccountName -Type String
-    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_KEY' -Value $storageAccountKey -Type String
-    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'FILE_SHARE_NAME' -Value $fileshareName -Type String
-
-    Write-Log "Environment variable set successfully." "INFO"
-
-} catch {
-    Write-Log "Failed to set environment variable: $_" "ERROR"
-    exit 1
 }
 
 try{
@@ -82,27 +59,25 @@ try{
 }
 
 try{
-    # Define the Startup folder path
-    $startupFolder = "C:\users\$Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+    $taskName = "Bootstrapping"
 
-    # Remove existing shortcut, if there is one
-    if(Test-Path "$startupFolder\$DownloadedFile.lnk"){
-        Remove-Item "$startupFolder\$DownloadedFile.lnk"
-    }
+    # Check if the scheduled task already exists
+    $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 
-    # Create the shortcut
-    $WshShell = New-Object -ComObject WScript.Shell
-    $Shortcut = $WshShell.CreateShortcut("$startupFolder\$DownloadedFile.lnk")
-    $Shortcut.TargetPath = "Powershell.exe"
-    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$DestinationFolder\$DownloadedFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
-    $Shortcut.Save()
+    if ($taskExists) {
+        Write-Log "Scheduled Task $taskName already exists. Skipping creation." "INFO"
+        exit 0
+    } else {
+    $triggerAtStartup = New-ScheduledTaskTrigger -AtStartup
+    $triggerAtLogon = New-ScheduledTaskTrigger -AtLogOn -User $Username
+    $action = New-ScheduledTaskAction -Execute "Powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$DestinationFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
     
-    Write-Log "Shortcut created in Startup folder." "INFO"
+    # Register the task
+    Register-ScheduledTask -TaskName $taskName -Trigger $triggerAtStartup,$triggerAtLogon -Action $action -User "$env:COMPUTERNAME\$Username" -Password $Password -RunLevel Highest
+    
+    Write-Log "Scheduled Task $taskName has been created to run $DestinationFile as $env:COMPUTERNAME\$Username." "INFO"
+    }
 }catch{
-    Write-Log "Failed to create shortcut: $_" "ERROR"
+    Write-Log "Failed to create scheduled task: $_" "ERROR"
     exit 1
 }
-
-# This is a bit extreme, maybe could work on a better solution. Its required for the autostart to execute the script. 
-# Currently we face issues switching the user context for running scripts in the CustomScriptExtension
-# Restart-Computer -Force

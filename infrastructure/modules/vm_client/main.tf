@@ -15,12 +15,7 @@ locals {
   fileshare_ext_resource_prefix = "ext"
   fileshare_ext_resource_name   = "${local.fileshare_ext_resource_prefix}${var.resource_name_specifier}${local.fileshare_ext_name}"
 
-  bootstrapping_md5 = filemd5("${path.module}/../../scripts/bootstrapping.ps1")
-  create_service_md5 = filemd5("${path.module}/../../scripts/create_service.ps1")
-
-  bootstrapping_md5_prefix = substr(local.bootstrapping_md5, 0, 2)
-  create_service_md5_prefix = substr(local.create_service_md5, 0, 2)
-  extension_resource_name   = "customScript_${local.bootstrapping_md5_prefix}${local.create_service_md5_prefix}"
+  extension_resource_name   = "customScript"
 }
 
 resource "azurerm_network_interface" "nic" {
@@ -100,6 +95,6 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
 
 
   protected_settings = jsonencode({
-    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" && powershell.exe Write-Host \"${local.create_service_md5}${local.bootstrapping_md5}\""
+  commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" -Password \"${azurerm_key_vault_secret.admin_password_secret.value}\"&& powershell.exe Write-Host \"${var.create_service_md5}${var.bootstrapping_md5}\""
   })
 }

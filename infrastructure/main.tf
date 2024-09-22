@@ -91,8 +91,8 @@ module "vm_client1" {
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
-  bootstrapping_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
-  create_service_md5 = azurerm_storage_blob.create_service_script.content_md5
+  bootstrapping_md5 = time_sleep.wait_after_blob_upload.triggers["bootstrapping_md5"]
+  create_service_md5 = time_sleep.wait_after_blob_upload.triggers["create_service_md5"]
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
@@ -126,8 +126,8 @@ module "vm_client2" {
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
-  bootstrapping_md5 = azurerm_storage_blob.bootstrapping_script.content_md5
-  create_service_md5 = azurerm_storage_blob.create_service_script.content_md5
+  bootstrapping_md5 = time_sleep.wait_after_blob_upload.triggers["bootstrapping_md5"]
+  create_service_md5 = time_sleep.wait_after_blob_upload.triggers["create_service_md5"]
 
   depends_on = [
     azurerm_virtual_network_peering.eu-to-us,
@@ -177,9 +177,19 @@ resource "azurerm_storage_blob" "create_service_script" {
   storage_container_name =  module.scripts_storage.scripts_container_name
   type                   = "Block"
   source                 =  "./scripts/create_service.ps1"
+
   content_md5            = filemd5("./scripts/create_service.ps1")
 }
 
+resource "time_sleep" "wait_after_blob_upload" {
+  create_duration = "30s"
+
+  triggers = {
+    # Wait after the blob upload to ensure the blob is available
+    create_service_md5 = azurerm_storage_blob.create_service_script.content_md5
+    bootstrapping_md5  = azurerm_storage_blob.bootstrapping_script.content_md5
+  }
+}
 
  module "private_link" {
    source              = "./modules/private_link"

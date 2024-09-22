@@ -61,6 +61,8 @@ We employ a modular approach for maintainability, where each module includes:
 ### Storage Account
 - Standard storage account with an Azure file share.
 - Secured using a private link.
+- Option: [Azure File Sync](https://docs.microsoft.com/en-us/azure/storage/files/storage-sync-files-planning). It's a new service from Microsoft, primarily meant for hybrid cloud architecture. It optimizes file sharing & adds features like syncing existing Windows Server fileshares to a cloud-native fileshare, giving you the freedom to use other Cloud services like private endpoints on top.
+We decided this to not be included in the PoC scope, but this can be a valid consideration.
 
 ### Key Vault
 - Stores secrets and sensitive information for the project.
