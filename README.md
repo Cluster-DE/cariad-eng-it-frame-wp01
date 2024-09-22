@@ -183,5 +183,5 @@ WarmupCount=1
 | Benchmark.FileDownload | FileDownloadSmall    | Multi-threaded download (10 in parallel) of a 1.0MB file               | 1,109.9 ms | 188.74 ms |   381.3 ms | 1,018.7 ms |   737.8 ms |  2,381.0 ms |      50.00 | 0.9009 |  3.32 |    1.23 |
 | Benchmark.FileDownload | FileDownloadMedium   | Multi-threaded download (10 in parallel) of a 2.0MB file               | 1,896.0 ms | 238.27 ms |   481.3 ms | 1,764.1 ms | 1,317.9 ms |  3,260.7 ms |      50.00 | 0.5274 |  5.68 |    1.65 |
 | Benchmark.FileDownload | FileDownloadLarge    | Multi-threaded download (10 in parallel) of a 4.0MB file               | 4,307.6 ms | 710.31 ms | 1,434.9 ms | 4,122.5 ms | 1,809.3 ms |  7,339.5 ms |      50.00 | 0.2321 | 12.89 |    4.67 |
-| Benchmark.FileDownload | FileDownloadLargest  | Multi-threaded download (10 in parallel) of a 10.0MB file              | 7,012.3 ms | 893.19 ms | 1,804.3 ms | 6,988.5 ms | 2,575.4 ms | 10,962.8 ms |      50.00 | 0.1426 | 20.99 |    
+| Benchmark.FileDownload | FileDownloadLargest  | Multi-threaded download (10 in parallel) of a 10.0MB file              | 7,012.3 ms | 893.19 ms | 1,804.3 ms | 6,988.5 ms | 2,575.4 ms | 10,962.8 ms |      50.00 | 0.1426 | 20.99 |    6.17 |
 
