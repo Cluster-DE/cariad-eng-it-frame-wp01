@@ -27,3 +27,8 @@ variable "eu_vnet_id" {
   type        = string
   description = "EU virtual network id"
 }
+
+variable "whitelisted_ips" {
+  description = "List of IP addresses allowed to access the storage account"
+  type        = list(string)
+}

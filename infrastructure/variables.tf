@@ -32,3 +32,8 @@ variable "principal_ids" {
   type        = list(string)
   description = "Principal IDs that are able to administer the resources"
 }
+
+variable "whitelisted_ips" {
+  type        = list(string)
+  description = "List of IP addresses allowed to access the resources"
+}

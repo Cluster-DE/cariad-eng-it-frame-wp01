@@ -67,9 +67,17 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 }
 
-resource "azurerm_private_dns_a_record" "vm_a_record" {
+resource "azurerm_private_dns_a_record" "vm_file_a_record" {
    name                = local.vm_resource_name
-   zone_name           = var.dns_zone_name
+   zone_name           = var.file_dns_zone_name
+   resource_group_name = var.resource_group_name_eu
+   ttl                 = 300
+   records             = [azurerm_windows_virtual_machine.vm.private_ip_address]
+ }
+
+resource "azurerm_private_dns_a_record" "vm_blob_a_record" {
+   name                = local.vm_resource_name
+   zone_name           = var.blob_dns_zone_name
    resource_group_name = var.resource_group_name_eu
    ttl                 = 300
    records             = [azurerm_windows_virtual_machine.vm.private_ip_address]
@@ -108,6 +116,6 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
 
 
   protected_settings = jsonencode({
-    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -storagePrivateDomain \"${var.storage_private_domain}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" && powershell.exe Write-Host \"${local.create_service_md5} ${local.bootstrapping_md5}\""
+    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" && powershell.exe Write-Host \"${local.create_service_md5} ${local.bootstrapping_md5}\""
   })
 }

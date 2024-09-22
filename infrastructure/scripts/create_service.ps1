@@ -4,7 +4,6 @@ param (
     [string]$Username,                # Username to run the service
     [string]$storageAccountName,
     [string]$storageAccountKey,
-    [string]$storagePrivateDomain,
     [string]$fileshareName,
     [string]$storageAccountConnectionString
 )
@@ -26,9 +25,6 @@ if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
     New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
 }
 
-# Until private link doesnt work, set it to the default value
-$storagePrivateDomain = "$storageAccountName.file.core.windows.net"
-
 # Set environment variables
 try {
     Write-Log "Setting environment variables for bootstrapping script." "INFO"
@@ -44,7 +40,6 @@ try {
     Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_CONNECTION_STRING' -Value $storageAccountConnectionString -Type String
     Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_NAME' -Value $storageAccountName -Type String
     Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_ACCOUNT_KEY' -Value $storageAccountKey -Type String
-    Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'STORAGE_PRIVATE_DOMAIN' -Value $storagePrivateDomain -Type String
     Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Environment" -Name 'FILE_SHARE_NAME' -Value $fileshareName -Type String
 
     Write-Log "Environment variable set successfully." "INFO"
@@ -99,7 +94,7 @@ try{
     $WshShell = New-Object -ComObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut("$startupFolder\$DownloadedFile.lnk")
     $Shortcut.TargetPath = "Powershell.exe"
-    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$DestinationFolder\$DownloadedFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -storagePrivateDomain `"$storagePrivateDomain`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
+    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$DestinationFolder\$DownloadedFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
     $Shortcut.Save()
     
     Write-Log "Shortcut created in Startup folder." "INFO"
@@ -108,5 +103,6 @@ try{
     exit 1
 }
 
-# This is a bit extreme, maybe could work on a better solution
-# Restart-Computer -Force
+# This is a bit extreme, maybe could work on a better solution. Its required for the autostart to execute the script. 
+# Currently we face issues switching the user context for running scripts in the CustomScriptExtension
+Restart-Computer -Force

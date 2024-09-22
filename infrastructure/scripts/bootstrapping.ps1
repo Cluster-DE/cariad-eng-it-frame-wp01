@@ -1,7 +1,6 @@
 param (
     [string]$storageAccountName = "",
     [string]$storageAccountKey = "",
-    [string]$storagePrivateDomain = "",
     [string]$fileShareName = "",
     [string]$storageAccountConnectionString = ""
 )
@@ -25,9 +24,6 @@ if ($env:STORAGE_ACCOUNT_NAME) {
 }
 if ($env:STORAGE_ACCOUNT_KEY) {
     $storageAccountKey = $env:STORAGE_ACCOUNT_KEY
-}
-if ($env:STORAGE_PRIVATE_DOMAIN) {
-    $storagePrivateDomain = $env:STORAGE_PRIVATE_DOMAIN
 }
 if ($env:FILE_SHARE_NAME) {
     $fileShareName = $env:FILE_SHARE_NAME

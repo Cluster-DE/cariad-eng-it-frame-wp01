@@ -83,10 +83,11 @@ module "vm_client1" {
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
-  storage_private_domain            = "REDACTED"
   fileshare_name                    = module.storage_account.fileshare_name
   scripts_container_name            = module.storage_account.scripts_container_name
-  dns_zone_name                     = module.private_link.dns_zone_name
+  
+  blob_dns_zone_name                     = module.private_link.blob_dns_zone_name
+  file_dns_zone_name                     = module.private_link.file_dns_zone_name
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
@@ -112,16 +113,16 @@ module "vm_client2" {
   resource_name_specifier = module.common_naming.resource_name_specifier_us
   client_number           = 2
   subnet_id               = module.virtual_network_us.subnet_id
-  dns_zone_name                     = module.private_link.dns_zone_name
 
   key_vault_id = module.key_vault.id
 
   storage_account_name              = module.storage_account.name
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
-  storage_private_domain            = "REDACTED"
   fileshare_name                    = module.storage_account.fileshare_name
   scripts_container_name            = module.storage_account.scripts_container_name
+  blob_dns_zone_name                     = module.private_link.blob_dns_zone_name
+  file_dns_zone_name                     = module.private_link.file_dns_zone_name
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
@@ -148,6 +149,8 @@ module "storage_account" {
   eu_subnet_id           = module.virtual_network_eu.subnet_id
   us_vnet_id          = module.virtual_network_us.id
   eu_vnet_id          = module.virtual_network_eu.id
+
+  whitelisted_ips = var.whitelisted_ips
 }
 
 # Upload scripts to blob storage

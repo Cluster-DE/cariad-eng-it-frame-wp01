@@ -18,9 +18,14 @@ variable "resource_name_specifier" {
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
 }
 
-variable "dns_zone_name"{
+variable "blob_dns_zone_name"{
   type        = string
-  description = "Name of the DNS zone"
+  description = "Name of the Blob DNS zone"
+}
+
+variable "file_dns_zone_name"{
+  type        = string
+  description = "Name of the File DNS zone"
 }
 
 variable "client_number" {
@@ -51,11 +56,6 @@ variable "storage_account_connection_string" {
 variable "fileshare_name" {
   type        = string
   description = "Name of the fileshare"
-}
-
-variable "storage_private_domain" {
-  type        = string
-  description = "Private domain of the storage account"
 }
 
 variable "bootstrapping_script_name"{
