@@ -18,14 +18,9 @@ variable "resource_name_specifier" {
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
 }
 
-variable "blob_dns_zone_name"{
+variable "dns_zone_name"{
   type        = string
   description = "Name of the Blob DNS zone"
-}
-
-variable "file_dns_zone_name"{
-  type        = string
-  description = "Name of the File DNS zone"
 }
 
 variable "client_number" {
@@ -86,4 +81,9 @@ variable "create_service_md5"{
 variable "key_vault_id"{
   type        = string
   description = "ID of the key vault"
+}
+
+variable "scripts_storage_account_name"{
+  type        = string
+  description = "Name of the storage account for the scripts"
 }

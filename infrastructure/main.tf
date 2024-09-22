@@ -84,10 +84,10 @@ module "vm_client1" {
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
   fileshare_name                    = module.storage_account.fileshare_name
-  scripts_container_name            = module.storage_account.scripts_container_name
-  
-  blob_dns_zone_name                     = module.private_link.blob_dns_zone_name
-  file_dns_zone_name                     = module.private_link.file_dns_zone_name
+  scripts_container_name            = module.scripts_storage.scripts_container_name
+  scripts_storage_account_name      = module.scripts_storage.name
+
+  dns_zone_name                     = module.private_link.dns_zone_name
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
@@ -117,12 +117,12 @@ module "vm_client2" {
   key_vault_id = module.key_vault.id
 
   storage_account_name              = module.storage_account.name
+  scripts_storage_account_name      = module.scripts_storage.name
   storage_account_key               = module.storage_account.key
   storage_account_connection_string = module.storage_account.connection_string
   fileshare_name                    = module.storage_account.fileshare_name
-  scripts_container_name            = module.storage_account.scripts_container_name
-  blob_dns_zone_name                     = module.private_link.blob_dns_zone_name
-  file_dns_zone_name                     = module.private_link.file_dns_zone_name
+  scripts_container_name            = module.scripts_storage.scripts_container_name
+  dns_zone_name                     = module.private_link.dns_zone_name
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
@@ -138,6 +138,13 @@ module "vm_client2" {
     azurerm_storage_blob.bootstrapping_script,
     azurerm_storage_blob.create_service_script
   ]
+}
+
+module "scripts_storage"{
+  source                  = "./modules/scripts_storage"
+  resource_group_name     = data.azurerm_resource_group.rg_eu.name
+  location                = data.azurerm_resource_group.rg_eu.location
+  resource_name_specifier = module.common_naming.resource_name_specifier_eu
 }
 
 module "storage_account" {
@@ -157,8 +164,8 @@ module "storage_account" {
 
 resource "azurerm_storage_blob" "bootstrapping_script" {
   name                   = "bootstrapping.ps1"
-  storage_account_name   =  module.storage_account.name
-  storage_container_name =  module.storage_account.scripts_container_name
+  storage_account_name   =  module.scripts_storage.name
+  storage_container_name =  module.scripts_storage.scripts_container_name
   type                   = "Block"
   source                 =  "./scripts/bootstrapping.ps1"
   content_md5            = filemd5("./scripts/bootstrapping.ps1")
@@ -166,8 +173,8 @@ resource "azurerm_storage_blob" "bootstrapping_script" {
 
 resource "azurerm_storage_blob" "create_service_script" {
   name                   = "create_service.ps1"
-  storage_account_name   =  module.storage_account.name
-  storage_container_name =  module.storage_account.scripts_container_name
+  storage_account_name   =  module.scripts_storage.name
+  storage_container_name =  module.scripts_storage.scripts_container_name
   type                   = "Block"
   source                 =  "./scripts/create_service.ps1"
   content_md5            = filemd5("./scripts/create_service.ps1")

@@ -67,24 +67,8 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 }
 
-resource "azurerm_private_dns_a_record" "vm_file_a_record" {
-   name                = local.vm_resource_name
-   zone_name           = var.file_dns_zone_name
-   resource_group_name = var.resource_group_name_eu
-   ttl                 = 300
-   records             = [azurerm_windows_virtual_machine.vm.private_ip_address]
- }
-
-resource "azurerm_private_dns_a_record" "vm_blob_a_record" {
-   name                = local.vm_resource_name
-   zone_name           = var.blob_dns_zone_name
-   resource_group_name = var.resource_group_name_eu
-   ttl                 = 300
-   records             = [azurerm_windows_virtual_machine.vm.private_ip_address]
- }
-
 resource "random_password" "admin_password" {
-  length  = 14
+  length  = 16
   special = false
   upper   = true
   lower   = true
@@ -99,7 +83,7 @@ resource "azurerm_key_vault_secret" "admin_password_secret" {
 
 # This creates the Custom Script Extension to copy the script to the VM
 resource "azurerm_virtual_machine_extension" "custom_script" {
-  name                 = "extension_resource_name"
+  name                 = local.extension_resource_name
   virtual_machine_id   = azurerm_windows_virtual_machine.vm.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
@@ -108,14 +92,14 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
   settings = <<SETTINGS
     {
       "fileUris": [
-        "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.bootstrapping_script_name}",
-        "https://${var.storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.create_service_script_name}"
+        "https://${var.scripts_storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.bootstrapping_script_name}",
+        "https://${var.scripts_storage_account_name}.blob.core.windows.net/${var.scripts_container_name}/${var.create_service_script_name}"
       ]
     }
   SETTINGS
 
 
   protected_settings = jsonencode({
-    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" && powershell.exe Write-Host \"${local.create_service_md5} ${local.bootstrapping_md5}\""
+    commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" && powershell.exe Write-Host \"${local.create_service_md5}${local.bootstrapping_md5}\""
   })
 }

@@ -105,4 +105,4 @@ try{
 
 # This is a bit extreme, maybe could work on a better solution. Its required for the autostart to execute the script. 
 # Currently we face issues switching the user context for running scripts in the CustomScriptExtension
-Restart-Computer -Force
+# Restart-Computer -Force
