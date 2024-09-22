@@ -145,6 +145,8 @@ module "scripts_storage"{
   resource_group_name     = data.azurerm_resource_group.rg_eu.name
   location                = data.azurerm_resource_group.rg_eu.location
   resource_name_specifier = module.common_naming.resource_name_specifier_eu
+
+  principal_ids = var.principal_ids
 }
 
 module "storage_account" {

@@ -12,3 +12,8 @@ variable "resource_name_specifier" {
   type        = string
   description = "Middle part of the resource name. Resource type is the prefix, resource name is the suffix"
 }
+
+variable "principal_ids" {
+  type        = list(string)
+  description = "List of principal ids to assign roles to"
+}
