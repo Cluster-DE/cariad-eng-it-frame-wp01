@@ -71,6 +71,17 @@ We decided this to not be included in the PoC scope, but this can be a valid con
 - Two VNets, one per region (EU and US).
 - VNets are peered, with security managed at the VNet level using Network Security Groups (NSGs).
 
+## CI/CD Infrastructure
+
+We are utilizing GitHub Actions for our CI/CD Pipelines. With it, we are automating the deployment process of the infrastructure.
+
+The default Terraform commands are sequentially called:
+1. terraform init
+2. terraform plan
+3. terraform apply
+
+To secure our pipeline parameters, we save them into our GitHub secrets. Additionally we use a environment specific .tfvars file for security uncritical parameters.
+
 ## PowerShell VM Bootstrapping
 
 ### Script Functions
