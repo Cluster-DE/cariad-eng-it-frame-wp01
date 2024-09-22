@@ -13,7 +13,7 @@ This project automates infrastructure deployment using Terraform and sets up vir
 
 ## Solution Architecture
 
-![](./architecture.drawio.png)
+![](./WP1_Architecture.drawio.png)
 
 ## Infrastructure as Code (IaC)
 
