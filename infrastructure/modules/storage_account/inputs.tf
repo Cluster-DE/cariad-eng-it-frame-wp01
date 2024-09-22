@@ -32,3 +32,8 @@ variable "whitelisted_ips" {
   description = "List of IP addresses allowed to access the storage account"
   type        = list(string)
 }
+
+variable "principal_ids" {
+  description = "List of principal ids to assign roles"
+  type        = list(string)
+}

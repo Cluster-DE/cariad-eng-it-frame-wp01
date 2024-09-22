@@ -41,13 +41,15 @@ resource "azurerm_storage_container" "scripts" {
 }
 
 resource "azurerm_role_assignment" "storage_contributor" {
+  for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Account Contributor"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = each.value
 }
 
 resource "azurerm_role_assignment" "storage_smb_share_contributor" {
+  for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage File Data SMB Share Contributor"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = each.value
 }
