@@ -54,11 +54,19 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
-          
+      
+      # Requires the storage & resource group variables to be adjusted
       - name: Whitelist IP on all storage accounts
         run: |
           IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
-          az storage account network-rule add --resource-group rg-cariad-frame-dev-euw --account-name stdevcfeuwshare --ip-address $IP_ADDRESS
+            STORAGE_ACCOUNT_NAME=stdevcfeuwshare 
+            RESOURCE_GROUP=rg-cariad-frame-dev-euw
+            if az storage account show --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP &>/dev/null; then
+              echo "Storage account exists."
+              az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $STORAGE_ACCOUNT_NAME --ip-address $IP_ADDRESS
+            else
+              echo "Storage account does not exist. Skipping..."
+            fi
         shell: bash
       
       - name: terraform plan
