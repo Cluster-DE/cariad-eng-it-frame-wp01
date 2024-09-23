@@ -6,7 +6,9 @@ param (
     [string]$storageAccountName,
     [string]$storageAccountKey,
     [string]$fileshareName,
-    [string]$storageAccountConnectionString
+    [string]$storageAccountConnectionString,
+    [bool]$createTask = $false     # Flag to create a scheduled task to run the script (default false). If true it requires the user to be logged in once before
+
 )
 
 $ErrorActionPreference = "Stop"
@@ -63,6 +65,19 @@ try{
 
     # Check if the scheduled task already exists
     $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+
+    if($createTask -eq $false){
+        Write-Log "Scheduled Task creation is disabled. Skipping creation." "INFO"
+        Write-Log "Creating shortcut to be manually run." "INFO"
+        $shortcutPath = "$DestinationFolder\RunBootstrapping.lnk"
+        $WshShell = New-Object -ComObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+        $Shortcut.TargetPath = "powershell.exe"
+        $Shortcut.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$DestinationFile`" -storageAccountName `"$storageAccountName`" -storageAccountKey `"$storageAccountKey`" -fileShareName `"$fileshareName`" -storageAccountConnectionString `"$storageAccountConnectionString`""
+        $Shortcut.Save()
+        Write-Log "Shortcut created at $shortcutPath" "INFO"
+        exit 0
+    }
 
     if ($taskExists) {
         Write-Log "Scheduled Task $taskName already exists. Skipping creation." "INFO"
