@@ -60,12 +60,15 @@ try{
     exit 1
 }
 
+
 try{
     $taskName = "Bootstrapping"
 
     # Check if the scheduled task already exists
     $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 
+    # If service is not being used, create a shortcut instead. This shortcut needs to be manually run.
+    # Shortcut can be found under $Destionationfolder (or C:\scripts by default) with the name RunBootstrapping.lnk
     if($createTask -eq $false){
         Write-Log "Scheduled Task creation is disabled. Skipping creation." "INFO"
         Write-Log "Creating shortcut to be manually run." "INFO"

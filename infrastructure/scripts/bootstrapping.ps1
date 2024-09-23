@@ -27,7 +27,6 @@ if($taskCreated){
     Start-Sleep -Seconds 300
 }
 
-
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
     New-Item -Path "C:\\CustomScriptExtensionLogs" -ItemType Directory
