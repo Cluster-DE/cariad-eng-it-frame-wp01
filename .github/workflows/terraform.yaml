@@ -54,9 +54,7 @@ jobs:
       - name: Whitelist IP on all storage accounts
         run: |
           IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
-          RESOURCE_GROUP=rg-cariad-frame-dev-euw
-          SHARE_STORAGE = stdevcfeuwshare
-          az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $SHARE_STORAGE --ip-address $IP_ADDRESS
+          az storage account network-rule add --resource-group rg-cariad-frame-dev-euw --account-name stdevcfeuwshare --ip-address $IP_ADDRESS
         shell: bash
       
       - name: terraform plan
