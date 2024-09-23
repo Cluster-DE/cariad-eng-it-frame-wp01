@@ -34,12 +34,6 @@ resource "azurerm_storage_share" "fileshare" {
   quota                = 30
 }
 
-resource "azurerm_storage_container" "scripts" {
-  name                  = "scripts"
-  storage_account_name  =  azurerm_storage_account.storage.name
-  container_access_type = "container"
-}
-
 resource "azurerm_role_assignment" "storage_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
