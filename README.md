@@ -1,6 +1,9 @@
 
 # Multi-Region File Share Solution
 
+## Repository
+[Link to Public Repository](https://github.com/Cluster-DE/cariad-eng-it-frame-wp01)
+
 ## Overview
 
 This project automates infrastructure deployment using Terraform and sets up virtual machines (VMs) with a PowerShell-based bootstrapping process. This process mounts an Azure file share onto VMs, ensuring secure cross-region connectivity using Azure Private Link. Resources span two regions: Europe (EU) and the United States (US), and all VMs are equipped with essential software dependencies (e.g., .NET SDK).
