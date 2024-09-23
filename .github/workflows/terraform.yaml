@@ -44,62 +44,62 @@ jobs:
           echo "Public IP: $(curl -s https://ipinfo.io/ip)"
           echo "::set-output name=agent_ip::$(curl -s https://ipinfo.io/ip)"
 
-    - name: Install Azure CLI
-        uses: azure/CLI@v1
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
+      - name: Install Azure CLI
+          uses: azure/CLI@v1
+        - name: Azure Login
+          uses: azure/login@v1
+          with:
+            client-id: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
+            tenant-id: ${{ vars.AZURE_TENANT_ID }}
+            subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+            client-secret: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
 
-      - name: Whitelist IP on all storage accounts
-        run: |
-          IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
-          RESOURCE_GROUP=${{ vars.RESOURCE_GROUP_NAME_EU }}
-          STORAGE_ACCOUNTS=$(az storage account list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
-          for ACCOUNT in $STORAGE_ACCOUNTS; do
-            az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $ACCOUNT --ip-address $IP_ADDRESS
-          done
-        shell: bash
+        - name: Whitelist IP on all storage accounts
+          run: |
+            IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
+            RESOURCE_GROUP=${{ vars.RESOURCE_GROUP_NAME_EU }}
+            STORAGE_ACCOUNTS=$(az storage account list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
+            for ACCOUNT in $STORAGE_ACCOUNTS; do
+              az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $ACCOUNT --ip-address $IP_ADDRESS
+            done
+          shell: bash
         
-      - name: terraform plan
-        working-directory: infrastructure
-        shell: bash
-        run: |
-          export exitcode=0
-          terraform plan -var-file="environment/dev/dev.tfvars" \
-            -var="whitelisted_ips=[\"${{ steps.fetch_ip.outputs.agent_ip }}\"]" \
-            -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
-          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        - name: terraform plan
+          working-directory: infrastructure
+          shell: bash
+          run: |
+            export exitcode=0
+            terraform plan -var-file="environment/dev/dev.tfvars" \
+              -var="whitelisted_ips=[\"${{ steps.fetch_ip.outputs.agent_ip }}\"]" \
+              -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+            echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
 
-          if [ $exitcode -eq 1 ]; then
-            echo Terraform Plan Failed!
-            exit 1
-          else
-            exit 0
-          fi
+            if [ $exitcode -eq 1 ]; then
+              echo Terraform Plan Failed!
+              exit 1
+            else
+              exit 0
+            fi
 
-      - name: terraform plan string
-        working-directory: infrastructure
-        shell: bash
-        id: tf-plan-string
-        run: |
-          TERRAFORM_PLAN=$(terraform show -no-color tfplan)
-          delimiter="$(openssl rand -hex 8)"
-          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-          echo "## Check Terraform Plan" >> $GITHUB_OUTPUT
-          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo '```terraform' >> $GITHUB_OUTPUT
-          echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
-          echo '```' >> $GITHUB_OUTPUT
-          echo "</details>" >> $GITHUB_OUTPUT
-          echo "${delimiter}" >> $GITHUB_OUTPUT
+        - name: terraform plan string
+          working-directory: infrastructure
+          shell: bash
+          id: tf-plan-string
+          run: |
+            TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+            delimiter="$(openssl rand -hex 8)"
+            echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+            echo "## Check Terraform Plan" >> $GITHUB_OUTPUT
+            echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo '```terraform' >> $GITHUB_OUTPUT
+            echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+            echo '```' >> $GITHUB_OUTPUT
+            echo "</details>" >> $GITHUB_OUTPUT
+            echo "${delimiter}" >> $GITHUB_OUTPUT
 
-      - name: terraform apply
-        working-directory: infrastructure
-        run: |
-          terraform apply -input=false -auto-approve tfplan
-        shell: bash
+        - name: terraform apply
+          working-directory: infrastructure
+          run: |
+            terraform apply -input=false -auto-approve tfplan
+          shell: bash
