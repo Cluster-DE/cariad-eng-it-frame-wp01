@@ -14,10 +14,10 @@ env:
   # ARM_CLIENT_OBJECT_ID: ${{ secrets.AZURE_SERVICE_PRINCIPAL_OBJECT_ID }} Once this is available in the secrets, add as -var parameter in terraform plan and apply
   ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-  
+
 concurrency:
   group: dev-deployment-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   terraform-apply:
