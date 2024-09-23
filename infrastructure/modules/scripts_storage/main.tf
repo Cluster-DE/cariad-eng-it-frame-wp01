@@ -31,9 +31,9 @@ resource "azurerm_role_assignment" "storage_contributor" {
   principal_id         = each.value
 }
 
-resource "azurerm_role_assignment" "storage_smb_share_contributor" {
+resource "azurerm_role_assignment" "blob_data_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
-  role_definition_name = "Storage File Data SMB Share Contributor"
+  role_definition_name = "Storage Blob Data Contributor"
   principal_id         = each.value
 }
