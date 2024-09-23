@@ -44,9 +44,6 @@ jobs:
           echo "Public IP: $(curl -s https://ipinfo.io/ip)"
           echo "::set-output name=agent_ip::$(curl -s https://ipinfo.io/ip)"
 
-      - name: Install Azure CLI
-        uses: azure/CLI@v1
-
       - name: Azure Login
         uses: azure/login@v1
         with:
