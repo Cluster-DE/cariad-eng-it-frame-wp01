@@ -2,7 +2,8 @@ param (
     [string]$storageAccountName = "",
     [string]$storageAccountKey = "",
     [string]$fileShareName = "",
-    [string]$storageAccountConnectionString = ""
+    [string]$storageAccountConnectionString = "",
+    [bool]$taskCreated = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,8 +22,11 @@ function Write-Log {
 # Log file path
 $mountDriveLetter = "Y"
 
-# Wait for 5 minutes before starting the script
-Start-Sleep -Seconds 300
+if($taskCreated){
+    # Wait for 5 minutes before starting the script
+    Start-Sleep -Seconds 300
+}
+
 
 # Create log directory if it doesn't exist
 if (-not (Test-Path -Path "C:\\CustomScriptExtensionLogs")) {
