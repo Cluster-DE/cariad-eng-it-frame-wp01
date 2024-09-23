@@ -54,6 +54,8 @@ We employ a modular approach for maintainability, where each module includes:
 ## Resource Overview
 
 ### Virtual Machines
+The VMs are not part of the tech task, however we decided to create VMs for simulating the clients and running the benchmarks with them. In particular, this allows better benchmark results independent from our local conncetivity. Below in the Performance measurement report section the benchmarking is described.
+
 - **OS**: Windows 11
 - **Replicability**: VM scaling as needed. Terraform can setup x VMs by just creating a new module call.
 - **Scripts & Dependencies**: VMs use extensions to automate the mounting of the Azure file share and manage software dependencies. Accessible via RDP.
