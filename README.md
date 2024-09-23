@@ -95,7 +95,7 @@ Two scripts are involved:
 ### Logging
 - Both scripts log activities under `C:\CustomScriptLogs` for detailed process tracking and debugging.
 
-## Networking Design
+## Secure Connection Concept / Networking Design
 
 ### VNet Peering
 
@@ -133,6 +133,14 @@ The tool measures the performance of file transfers with PDF files of varying si
 - **Multi-threaded operations**: 10 files are transferred in parallel, measuring how well our infrastructure implementation handles concurrent operations.
 
 Each test is executed **50 times** to ensure robust statistical data, minimizing the impact of fluctuations. The tool then compiles and generates comprehensive statistics.
+
+### Optimization
+
+Several optimizations were made to improve performance:
+
+- **VM Image Selection:** After testing various images, Windows 11 was chosen over Windows Server 2022 Data Center for better overall performance and responsiveness.
+- **Storage Access Optimization:** Transitioning from Public Storage to Private Link significantly improved performance by enhancing DNS resolution, reducing latency, and ensuring faster, more secure data access.
+- **Storage Upgrade (Planned):** Upgrading from Standard Storage to Premium Storage with SSDs is recommended for further performance gains. This was not implemented due to time constraints but remains a future optimization opportunity.
 
 ### Results
 
