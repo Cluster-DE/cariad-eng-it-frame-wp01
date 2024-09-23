@@ -10,7 +10,7 @@ env:
   # ARM_CLIENT_OBJECT_ID: ${{ secrets.AZURE_SERVICE_PRINCIPAL_OBJECT_ID }} Once this is available in the secrets, add as -var parameter in terraform plan and apply
   ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-
+  RESOURCE_GROUP_NAME_EU: "rg-cariad-frame-dev-euw"
 jobs:
   terraform-apply:
     name: terraform init
@@ -41,6 +41,27 @@ jobs:
           echo "Public IP: $(curl -s https://ipinfo.io/ip)"
           echo "::set-output name=agent_ip::$(curl -s https://ipinfo.io/ip)"
 
+    - name: Install Azure CLI
+        uses: azure/CLI@v1
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
+
+      - name: Whitelist IP on all storage accounts
+        run: |
+          IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
+          RESOURCE_GROUP=${{ vars.RESOURCE_GROUP_NAME_EU }}
+          STORAGE_ACCOUNTS=$(az storage account list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
+          for ACCOUNT in $STORAGE_ACCOUNTS; do
+            az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $ACCOUNT --ip-address $IP_ADDRESS
+          done
+        shell: bash
+        
       - name: terraform plan
         working-directory: infrastructure
         shell: bash
