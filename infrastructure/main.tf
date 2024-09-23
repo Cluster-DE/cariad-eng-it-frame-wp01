@@ -91,6 +91,7 @@ module "vm_client1" {
 
   bootstrapping_script_name = "bootstrapping.ps1"
   create_service_script_name = "create_service.ps1"
+  # wait_after_blob_upload ensures that the blobs are created and up to date. 
   bootstrapping_md5 = time_sleep.wait_after_blob_upload.triggers["bootstrapping_md5"]
   create_service_md5 = time_sleep.wait_after_blob_upload.triggers["create_service_md5"]
 
@@ -163,8 +164,7 @@ module "storage_account" {
   principal_ids = var.principal_ids
 }
 
-# Upload scripts to blob storage
-
+# Upload bootstrapping_script to script storage
 resource "azurerm_storage_blob" "bootstrapping_script" {
   name                   = "bootstrapping.ps1"
   storage_account_name   =  module.scripts_storage.name
@@ -174,6 +174,7 @@ resource "azurerm_storage_blob" "bootstrapping_script" {
   content_md5            = filemd5("./scripts/bootstrapping.ps1")
 }
 
+# Upload create_service_script to script storage
 resource "azurerm_storage_blob" "create_service_script" {
   name                   = "create_service.ps1"
   storage_account_name   =  module.scripts_storage.name
@@ -185,7 +186,7 @@ resource "azurerm_storage_blob" "create_service_script" {
 }
 
 resource "time_sleep" "wait_after_blob_upload" {
-  create_duration = "30s"
+  create_duration = "30s" #The time may need to be adjusted based on the size of the scripts
 
   triggers = {
     # Wait after the blob upload to ensure the blob is available

@@ -8,6 +8,7 @@ locals {
   storage_resource_name   = "${local.storage_resource_prefix}${var.resource_name_specifier}${local.storage_name}"
 }
 
+# Storage account for storing scripts, which then are downloaded by a VM-Extension
 resource "azurerm_storage_account" "storage" {
   name                     = local.storage_resource_name
   resource_group_name      = var.resource_group_name
@@ -24,6 +25,7 @@ resource "azurerm_storage_container" "scripts" {
   container_access_type = "container"
 }
 
+# Assign Storage Account Contributor role to all user/service principals listed in var.principal_ids
 resource "azurerm_role_assignment" "storage_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
@@ -31,6 +33,7 @@ resource "azurerm_role_assignment" "storage_contributor" {
   principal_id         = each.value
 }
 
+# Assign Storage Blob Data Contributor role to all user/service principals listed in var.principal_ids
 resource "azurerm_role_assignment" "blob_data_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id

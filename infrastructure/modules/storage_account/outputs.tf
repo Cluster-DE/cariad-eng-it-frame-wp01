@@ -17,7 +17,3 @@ output "connection_string"{
 output "id"{
     value = azurerm_storage_account.storage.id
 }
-
-# output "private_domain"{
-#     value = "${local.storage_resource_name}.privatelink.file.core.windows.net"
-# }

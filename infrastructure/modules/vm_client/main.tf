@@ -18,6 +18,7 @@ locals {
   extension_resource_name   = "customScript"
 }
 
+# Network interface for the VM
 resource "azurerm_network_interface" "nic" {
   name                = local.nic_resource_name
   location            = var.location
@@ -42,7 +43,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   name                = local.vm_resource_name
   resource_group_name = var.resource_group_name_us
   location            = var.location
-  size                = "Standard_D2_v4" #optimized for storage
+  size                = "Standard_D2_v4" # 2 vCPUs, 8 GiB memory
   admin_username      = "adminuser"
   admin_password      = azurerm_key_vault_secret.admin_password_secret.value
   network_interface_ids = [
@@ -62,6 +63,8 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 }
 
+# Generates a random password used for the VMs. 
+# It should not contain special characters, as it makes it harder to pass them as arguments to scripts.
 resource "random_password" "admin_password" {
   length  = 16
   special = false
@@ -84,6 +87,8 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"
 
+  # Downloads blobs under C:\Packages\Plugins\Microsoft.Compute.CustomScriptExtension\1.10.18\Downloads folder. 
+  # The version number may vary and needs to be adapted. There is no proper way to get the exact version of type_handler_version. 
   settings = <<SETTINGS
     {
       "fileUris": [
@@ -93,7 +98,8 @@ resource "azurerm_virtual_machine_extension" "custom_script" {
     }
   SETTINGS
 
-
+  # This script will be executed on the VM. Is securely transmitted using protected settings.
+  # This opens a Administrative PowerShell session as a system account, downloads the bootstrapping script and the service creation script, and executes them.
   protected_settings = jsonencode({
   commandToExecute = "powershell.exe -ExecutionPolicy Unrestricted -File ${var.create_service_script_name} -storageAccountName \"${var.storage_account_name}\" -storageAccountKey \"${var.storage_account_key}\" -fileshareName \"${var.fileshare_name}\" -storageAccountConnectionString \"${var.storage_account_connection_string}\" -DownloadedFile \"${var.bootstrapping_script_name}\" -DestinationFolder \"C:\\scripts\" -Username \"adminuser\" -Password \"${azurerm_key_vault_secret.admin_password_secret.value}\"&& powershell.exe Write-Host \"${var.create_service_md5}${var.bootstrapping_md5}\""
   })

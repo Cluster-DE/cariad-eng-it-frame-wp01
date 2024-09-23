@@ -12,6 +12,7 @@ locals {
   fileshare_resource_name   = "${local.fileshare_resource_prefix}${var.resource_name_specifier}${local.fileshare_name}"
 }
 
+# Main storage account for everything related to file sharing
 resource "azurerm_storage_account" "storage" {
   name                     = local.storage_resource_name
   resource_group_name      = var.resource_group_name
@@ -28,12 +29,14 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
+# Share, which will be mounted on each VM Client
 resource "azurerm_storage_share" "fileshare" {
   name                 = local.fileshare_resource_name
   storage_account_name = azurerm_storage_account.storage.name
   quota                = 30
 }
 
+# Assign Storage Account Contributor role to all user/service principals listed in var.principal_ids
 resource "azurerm_role_assignment" "storage_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id
@@ -41,6 +44,7 @@ resource "azurerm_role_assignment" "storage_contributor" {
   principal_id         = each.value
 }
 
+# Assign Storage File Data SMB Share Contributor role to all user/service principals listed in var.principal_ids
 resource "azurerm_role_assignment" "storage_smb_share_contributor" {
   for_each = toset(var.principal_ids)
   scope                = azurerm_storage_account.storage.id

@@ -26,6 +26,7 @@ locals{
    resource_group_name = var.resource_group_name
  }
 
+# Private Endpoint Connection to Storage Account. This contains all private endpoint resources.
  resource "azurerm_private_endpoint" "storage_private_endpoint" {
    name                = local.private_endpoint_resource_name
    location            = var.location
@@ -45,6 +46,7 @@ locals{
   }
  }
 
+ # Links the Private DNS Zone to the Virtual Network in EU
  resource "azurerm_private_dns_zone_virtual_network_link" "eu_storage_dns_link" {
    name                  = local.eu_dns_zone_private_link_resource_name
    resource_group_name   = var.resource_group_name
@@ -53,6 +55,7 @@ locals{
    virtual_network_id    = var.eu_vnet_id
  }
 
+  # Links the Private DNS Zone to the Virtual Network in US
  resource "azurerm_private_dns_zone_virtual_network_link" "us_storage_dns_link" {
    name                  = local.us_dns_zone_private_link_resource_name
    resource_group_name   = var.resource_group_name
@@ -61,6 +64,7 @@ locals{
    virtual_network_id    = var.us_vnet_id
  }
 
+ # Adds an A record to the Private DNS Zone, pointing to the Private IP of the Private Endpoint.
  resource "azurerm_private_dns_a_record" "dns_a_record" {
    name                = "a_record"
    zone_name           = azurerm_private_dns_zone.storage_dns_zone.name

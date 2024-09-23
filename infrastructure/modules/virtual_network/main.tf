@@ -12,6 +12,8 @@ locals {
   nsg_resource_name   = "${local.nsg_resource_prefix}${var.resource_name_specifier}${local.nsg_name}"
 }
 
+
+# Firewall rules for the network security group. Allow RDP and SMB(Fileshare) traffic
 resource "azurerm_network_security_group" "network_security_group" {
   name                = local.nsg_resource_name
   location            = var.location
@@ -56,6 +58,7 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = var.subnet_address_prefixes
 }
 
+# Associate the network security group with the subnet.
 resource "azurerm_subnet_network_security_group_association" "subnet_nsg_association" {
   subnet_id                 = azurerm_subnet.subnet.id
   network_security_group_id = azurerm_network_security_group.network_security_group.id
