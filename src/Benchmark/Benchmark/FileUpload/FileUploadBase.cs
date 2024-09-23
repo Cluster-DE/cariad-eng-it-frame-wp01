@@ -10,16 +10,38 @@ using BenchmarkDotNet.Jobs;
 
 namespace Benchmark.FileUpload;
 
-[SimpleJob(RunStrategy.ColdStart, RuntimeMoniker.Net80, warmupCount: 1, iterationCount: Constants.Measurement.IterationCount)]
+/// <summary>
+/// Base class for handling file uploads in benchmarking scenarios.
+/// </summary>
+/// <remarks>
+/// Provides setup, cleanup, and asynchronous file upload methods.
+/// Utilizes BenchmarkDotNet for measuring performance.
+/// </remarks>
+[SimpleJob(
+    RunStrategy.ColdStart,
+    RuntimeMoniker.Net80,
+    warmupCount: 1,
+    iterationCount: Constants.Measurement.IterationCount)]
 [Config(typeof(BenchmarkConfig))]
 [ArtifactsPath("BenchmarkDotNet.Artifacts")]
 public class FileUploadBase
 {
+    /// <summary>
+    /// Gets the file path of the local file to be uploaded.
+    /// The file path is specific to the subclass implementation and defines
+    /// the location of a file used in the benchmarking tests.
+    /// </summary>
     protected virtual string LocalFilePath => "";
     
     private ShareClient _shareClient;
-    private ShareDirectoryClient _shareDirectoryClient;
     
+    private ShareDirectoryClient _shareDirectoryClient;
+
+    /// <summary>
+    /// Sets up the asynchronous environment for file upload operations.
+    /// Initializes the ShareClient and ShareDirectoryClient by creating
+    /// the necessary Azure File Share resources if they do not already exist.
+    /// </summary>
     [GlobalSetup]
     public async Task SetupAsync()
     {
@@ -38,6 +60,10 @@ public class FileUploadBase
         Console.WriteLine("Setup of ShareDirectoryClient completed");
     }
 
+    /// <summary>
+    /// Asynchronously uploads a file to an Azure File Share. The file is uploaded in chunks of
+    /// 4MB to handle large files efficiently (Put Range Limit). The file is specified by the LocalFilePath property.
+    /// </summary>
     protected async Task UploadFileAsync()
     {
         const int maxChunkSize = 4 * 1024 * 1024; // 4MB
@@ -59,7 +85,11 @@ public class FileUploadBase
             fileOffset += bytesRead;
         }
     }
-    
+
+    /// <summary>
+    /// Uploads a file to a share storage in parallel using multiple threads.
+    /// Kicks off multiple tasks to perform the upload concurrently.
+    /// </summary>
     protected async Task UploadFileParallelAsync()
     {
         var tasks = new List<Task>();
@@ -74,7 +104,10 @@ public class FileUploadBase
 
         await Task.WhenAll(tasks);
     }
-    
+
+    /// <summary>
+    /// Cleans up resources used during the file upload benchmark.
+    /// </summary>
     [GlobalCleanup]
     public async Task CleanupAsync()
     {

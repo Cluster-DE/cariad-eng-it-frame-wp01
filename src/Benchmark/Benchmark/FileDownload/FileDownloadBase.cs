@@ -10,18 +10,44 @@ using BenchmarkDotNet.Jobs;
 
 namespace Benchmark.FileDownload;
 
-[SimpleJob(RunStrategy.ColdStart, RuntimeMoniker.Net80, warmupCount: 1, iterationCount: Constants.Measurement.IterationCount)]
+/// <summary>
+/// Base class for handling file downloads in benchmarking scenarios.
+/// </summary>
+/// <remarks>
+/// Provides setup, cleanup, and asynchronous file download methods.
+/// Utilizes BenchmarkDotNet for measuring performance.
+/// </remarks>
+[SimpleJob(
+    RunStrategy.ColdStart,
+    RuntimeMoniker.Net80,
+    warmupCount: 1,
+    iterationCount: Constants.Measurement.IterationCount)]
 [Config(typeof(BenchmarkConfig))]
 [ArtifactsPath("BenchmarkDotNet.Artifacts")]
 public class FileDownloadBase
 {
+    /// <summary>
+    /// Gets the file path of the local file to be uploaded.
+    /// The file path is specific to the subclass implementation and defines
+    /// the location of a file used in the benchmarking tests.
+    /// </summary>
     protected virtual string LocalFilePath => "";
     
     private ShareClient _shareClient;
+    
     private ShareDirectoryClient _shareDirectoryClient;
-    
+
+    /// <summary>
+    /// The name of the file that is currently being worked on.
+    /// This variable is assigned during the setup process when a file is uploaded.
+    /// </summary>
     private string _workingFileName = string.Empty;
-    
+
+    /// <summary>
+    /// Asynchronously sets up the environment necessary for file download benchmarks.
+    /// This includes establishing connections to Azure File Share, creating
+    /// directory clients, and uploading a sample file.
+    /// </summary>
     [GlobalSetup]
     public async Task SetupAsync()
     {
@@ -44,6 +70,10 @@ public class FileDownloadBase
         Console.WriteLine("Upload of SampleFile completed");
     }
 
+    /// <summary>
+    /// Asynchronously uploads a file to an Azure File Share. The file is uploaded in chunks of
+    /// 4MB to handle large files efficiently (Put Range Limit). The file is specified by the LocalFilePath property.
+    /// </summary>
     private async Task<string> UploadFileAsync(string filePath)
     {
         const int maxChunkSize = 4 * 1024 * 1024; // 4MB
@@ -67,7 +97,10 @@ public class FileDownloadBase
 
         return fileClient.Name;
     }
-    
+
+    /// <summary>
+    /// Downloads a file asynchronously from the Azure Share Directory and streams its content.
+    /// </summary>
     protected async Task DownloadFileAsync()
     {
         var fileClient = _shareDirectoryClient.GetFileClient(_workingFileName);
@@ -79,7 +112,10 @@ public class FileDownloadBase
             await ReadStreamToEnd(fileDownloadResult.Value.Content);
         }
     }
-    
+
+    /// <summary>
+    /// Downloads a file in parallel using multiple asynchronous tasks.
+    /// </summary>
     protected async Task DownloadFileParallelAsync()
     {
         var tasks = new List<Task>();
@@ -94,7 +130,11 @@ public class FileDownloadBase
 
         await Task.WhenAll(tasks);
     }
-    
+
+    /// <summary>
+    /// Reads the entire content of a given stream asynchronously to the end.
+    /// </summary>
+    /// <param name="input">The input stream to read from.</param>
     private async Task ReadStreamToEnd(Stream input)
     {
         var buffer = new byte[10 * 1024 * 1024];
@@ -107,7 +147,10 @@ public class FileDownloadBase
 
         _ = ms.ToArray();
     }
-    
+
+    /// <summary>
+    /// Cleans up resources used during the file download benchmark.
+    /// </summary>
     [GlobalCleanup]
     public async Task CleanupAsync()
     {
