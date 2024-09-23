@@ -95,7 +95,7 @@ Two scripts are involved:
 ### Logging
 - Both scripts log activities under `C:\CustomScriptLogs` for detailed process tracking and debugging.
 
-## Networking Design
+## Secure Connection Concept / Networking Design
 
 ### VNet Peering
 
