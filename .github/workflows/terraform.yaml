@@ -46,7 +46,6 @@ jobs:
 
     - name: Install Azure CLI
         uses: azure/CLI@v1
-
       - name: Azure Login
         uses: azure/login@v1
         with:
