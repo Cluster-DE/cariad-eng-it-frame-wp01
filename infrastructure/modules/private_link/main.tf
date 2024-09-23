@@ -40,6 +40,7 @@ locals{
      is_manual_connection           = false 
    }
 
+   # Associate the Private Endpoint with the Private DNS Zone
    private_dns_zone_group {
     name                 = "privatelink-file-core-windows.net"
     private_dns_zone_ids = [azurerm_private_dns_zone.storage_dns_zone.id]
