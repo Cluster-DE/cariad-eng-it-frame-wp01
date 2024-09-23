@@ -7,10 +7,6 @@ on:
     # Trigger pipeline only when changes are made to workflows
     paths:
       - '.github/workflows/**'
-      
-permissions:
-  id-token: write  # Required to authenticate using OIDC
-  contents: read   # Adjust other permissions as needed
 
 env:
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
@@ -49,14 +45,12 @@ jobs:
           echo "Public IP: $(curl -s https://ipinfo.io/ip)"
           echo "::set-output name=agent_ip::$(curl -s https://ipinfo.io/ip)"
 
-      - name: Azure Login
-        uses: azure/login@v1
+      - name: Azure Login action
+        uses: azure/login@v2
         with:
-          client-id: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
-
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+          
       - name: Whitelist IP on all storage accounts
         run: |
           IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
