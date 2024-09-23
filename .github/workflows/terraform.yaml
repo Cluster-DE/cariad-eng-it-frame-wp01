@@ -7,6 +7,11 @@ on:
     # Trigger pipeline only when changes are made to workflows
     paths:
       - '.github/workflows/**'
+      
+permissions:
+  id-token: write  # Required to authenticate using OIDC
+  contents: read   # Adjust other permissions as needed
+
 env:
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
   ARM_CLIENT_ID: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
