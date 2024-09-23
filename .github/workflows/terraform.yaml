@@ -5,10 +5,11 @@ on:
   workflow_dispatch:
 
 env:
-  ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET}}
-  ARM_CLIENT_ID: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID}}
-  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID}}
-  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID}}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
+  ARM_CLIENT_ID: ${{ vars.AZURE_SERVICE_PRINCIPAL_ID }}
+  # ARM_CLIENT_OBJECT_ID: ${{ secrets.AZURE_SERVICE_PRINCIPAL_OBJECT_ID }} Once this is available in the secrets, add as -var parameter in terraform plan and apply
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
 
 jobs:
   terraform-apply:
@@ -18,29 +19,45 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
       - name: setup terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
+
       - name: terraform init
         working-directory: infrastructure
         run: |
-          terraform init -upgrade=true -reconfigure -input=false -backend-config="resource_group_name=${{ vars.TF_STATE_RG_NAME }}" -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_NAME }}" -backend-config="container_name=${{ vars.TF_STATE_CONTAINER_NAME }}" -backend-config="key=dev.tfstate"
+          terraform init -upgrade=true -reconfigure -input=false \
+            -backend-config="resource_group_name=${{ vars.TF_STATE_RG_NAME }}" \
+            -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_NAME }}" \
+            -backend-config="container_name=${{ vars.TF_STATE_CONTAINER_NAME }}" \
+            -backend-config="key=dev.tfstate"
         shell: bash
+
+      - name: Fetch public IP of GitHub Actions runner
+        id: fetch_ip
+        run: |
+          echo "Public IP: $(curl -s https://ipinfo.io/ip)"
+          echo "::set-output name=agent_ip::$(curl -s https://ipinfo.io/ip)"
+
       - name: terraform plan
         working-directory: infrastructure
         shell: bash
         run: |
           export exitcode=0
-          terraform plan -var-file="environment/dev/dev.tfvars" -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+          terraform plan -var-file="environment/dev/dev.tfvars" \
+            -var="whitelisted_ips=[\"${{ steps.fetch_ip.outputs.agent_ip }}\"]" \
+            -input=false -detailed-exitcode -no-color -out tfplan || export exitcode=$?
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-          
+
           if [ $exitcode -eq 1 ]; then
             echo Terraform Plan Failed!
             exit 1
-          else 
+          else
             exit 0
           fi
+
       - name: terraform plan string
         working-directory: infrastructure
         shell: bash
@@ -57,6 +74,7 @@ jobs:
           echo '```' >> $GITHUB_OUTPUT
           echo "</details>" >> $GITHUB_OUTPUT
           echo "${delimiter}" >> $GITHUB_OUTPUT
+
       - name: terraform apply
         working-directory: infrastructure
         run: |
