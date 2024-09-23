@@ -55,10 +55,8 @@ jobs:
         run: |
           IP_ADDRESS=${{ steps.fetch_ip.outputs.agent_ip }}
           RESOURCE_GROUP=rg-cariad-frame-dev-euw
-          STORAGE_ACCOUNTS=$(az storage account list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
-          for ACCOUNT in $STORAGE_ACCOUNTS; do
-            az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $ACCOUNT --ip-address $IP_ADDRESS
-          done
+          SHARE_STORAGE = stdevcfeuwshare
+          az storage account network-rule add --resource-group $RESOURCE_GROUP --account-name $SHARE_STORAGE --ip-address $IP_ADDRESS
         shell: bash
       
       - name: terraform plan
