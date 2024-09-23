@@ -4,9 +4,9 @@ run-name: '🚀 dev-deployment: "${{ github.ref_name }}"'
 on:
   workflow_dispatch:
   push:
-    # Trigger pipeline only when changes are made to workflows
     paths:
       - '.github/workflows/**'
+      - 'infrastructure/**'
 
 env:
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }}
