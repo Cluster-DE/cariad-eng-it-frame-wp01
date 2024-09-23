@@ -117,22 +117,6 @@ For Private Link to function properly, DNS must be configured to resolve private
 
 The bootstrapping script configures VMs in VNet B to mount the file share securely using Private Link, ensuring that credentials persist across reboots.
 
-## Common Issues & Resolutions
-
-### VM and Script Issues
-- **Credential Setting Failure**: Review the file share log if credential management fails.
-- **File Share Mounting Failure**: Ensure that Private Link and DNS settings are correct.
-- **.NET SDK Installation Issues**: Check the bootstrapping log for download or installation errors.
-- **CustomScriptExtension Challenges**: Some tasks (e.g., `cmdkey` credential management) fail when executed under the CustomScriptExtension context but work under direct execution. Consider using Windows services for more reliable script execution.
-- **Provisioning Failures**: When CustomScriptExtensions fail initially, Terraform can lose track of their state. Manual intervention may be required.
-- **Windows File Share Bug**: Occasionally, programmatically created file shares show as "disconnected," but remain functional. This is a known issue requiring further investigation.
-- **Environment variables Bug**: When setting environment variables with cmdlets like setx or SetEnvironmentVariable, the variable isn't set. We got it to work only by using direct registry entries. 
-### Terraform & Azure Limitations
-- **Storage Account Tier Restrictions**: Private Link cannot be used with premium storage accounts (SSDs), limiting performance choices.
-- **Cross-Region ServiceConnections**: These are restricted to the same region, making cross-region deployments challenging when using ServiceConnections.
-- **Storage account without public access disables GitHub Agents & local development**: When disabling public access, the azure resource manager behind terraform cannot access resources like blobs & fileshares. This issue can be solved by creating or connecting a ci/cd agent with our vnet. For local development we have the same case - we would need to use a VPN to allow that. 
-Alteratively, we can also allow the current ip address of the agent or the developer before deployment. 
-
 ## Ansible playbook configuration
 
 The limited time available did not allow for the development, testing, and fine-tuning of Ansible configurations. Instead, we opted for Terraform, which allowed us to quickly provision and configure the required infrastructure in a more time-efficient manner, leveraging its declarative approach and our team's familiarity with the tool. This ensured that we met the deadline while maintaining the desired configuration outcomes.
